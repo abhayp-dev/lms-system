@@ -20,12 +20,12 @@ export const UPLOAD_BG = "/v1/konzeptes/upload/bg";
 
 // --- Activity Management Endpoints ---
 export const GET_CARDS_CONFIG = "/v1/konzeptes/config";
-export const SAVE_ACTIVITY = "/lms_admin/save";
-export const SAVE_COMPLETE_WORD = "/lms_admin/save_completeword";
+export const SAVE_ACTIVITY = "/admin/save";
+export const SAVE_COMPLETE_WORD = "/admin/save_completeword";
 
 // --- Activity List Endpoints ---
-export const GET_ACTIVITY_LIST = "/lms_admin/list";
-export const DELETE_ACTIVITY = "/lms_admin/delete";
+export const GET_ACTIVITY_LIST = "/admin/list";
+export const DELETE_ACTIVITY = "/admin/delete";
 
 // --- Profile Endpoints ---
 export const POST_USER_PROFILE = "/user-api/profile";
