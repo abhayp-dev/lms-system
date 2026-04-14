@@ -1,166 +1,7 @@
-// import styled from 'styled-components';
-// import Link from 'next/link';
-// import { useRouter } from 'next/router';
-// import { useEffect, useState } from 'react';
-// import UserDropdown from 'comps/UserDropdown'; // 👈 1. IMPORT DROPDOWN
-
-// const Styled = styled.div`
-//   background-color: var(--l);
-//   min-height: 100vh;
-
-//   .wrap {
-//     padding: 20px;
-//     width: 1100px;
-//     margin: 0 auto;
-//     background-color: white;
-//     position: relative;
-//   }
-
-//   .mascot {
-//     margin: 0 auto;
-//   }
-//   .imgIcon {
-//     position: absolute;
-//     color: #dbf7c3;
-//   }
-
-//   h1 {
-//     font-family: var(--font1);
-//     font-weight: bold;
-//     font-size: 3.53rem;
-//     text-align: center;
-//     margin-top: 80px;
-//     color: #2b7d10;
-//     line-height: 1;
-//   }
-
-//   .tagline {
-//     font-weight: bold;
-//     text-align: center;
-//     font-size: 1.1rem;
-//     font-family: var(--font2);
-//     color: var(--h2);
-//   }
-
-//   .actionBtn {
-//     font-size: 2rem;
-//     background-color: var(--h2);
-//     margin: 10px 10px 10px auto;
-//     padding: 5px 20px;
-//     border-radius: 10px;
-//     overflow: visible;
-//     position: absolute;
-//     right: 20px;
-//     bottom: 20px;
-//     color: white;
-//     cursor: pointer;
-//     border: 0px solid white;
-//     box-shadow: var(--shadow3);
-//     text-decoration: none;
-//   }
-// `;
-
-// var bgList = [
-//   {
-//     id: 'icon1.png',
-//     pos: [
-//       { x: 450, y: 30 },
-//       { x: 110, y: 220 },
-//       { x: 920, y: 450 },
-//     ],
-//   },
-//   {
-//     id: 'icon2.png',
-//     pos: [
-//       { x: 50, y: 100 },
-//       { x: 950, y: 100 },
-//       { x: 270, y: 320 },
-//     ],
-//   },
-//   {
-//     id: 'icon3.png',
-//     pos: [
-//       { x: 700, y: 20 },
-//       { x: 700, y: 350 },
-//       { x: 40, y: 350 },
-//     ],
-//   },
-//   {
-//     id: 'icon4.png',
-//     pos: [
-//       { x: 830, y: 250 },
-//       { x: 20, y: 550 },
-//     ],
-//   },
-//   {
-//     id: 'icon5.png',
-//     pos: [
-//       { x: 950, y: 310 },
-//       { x: 170, y: 450 },
-//     ],
-//   },
-//   {
-//     id: 'icon6.png',
-//     pos: [
-//       { x: 250, y: 80 },
-//       { x: 750, y: 500 },
-//       { x: 350, y: 500 },
-//     ],
-//   },
-// ];
-
-// export default function Intro(props) {
-//   const router = useRouter();
-//   const basePath = router.basePath || '';
-
-//   return (
-//     <Styled>
-//       <div className="wrap">
-//         {/* 🟢 2. ADD USER DROPDOWN HERE */}
-//         <UserDropdown />
-
-//         <div style={{ position: 'relative' }}>
-//           {bgList.map((item) => (
-//             <>
-//               {item.pos.map((p) => (
-//                 <img
-//                   key={`${item.id}-${p.x}-${p.y}`}
-//                   className="imgIcon"
-//                   src={`${basePath}/kon/${item.id}`}
-//                   alt=""
-//                   style={{ top: p.y, left: p.x }}
-//                 />
-//               ))}
-//             </>
-//           ))}
-//         </div>
-//         <div style={{ zIndex: 1, position: 'relative' }}>
-//           <img src={`${basePath}/img/konzeptes/logo.png`} alt="logo" />
-//           <header>
-//             <h1 style={{ fontWeight: 'bold' }}>WELCOME TO KONZEPTES!</h1>
-//             <p className="tagline">
-//               Explore our learning modules and improve your language skills.
-//             </p>
-//           </header>
-//           <img
-//             className="mascot"
-//             src={`${basePath}/img/konzeptes/kea.png`}
-//             alt="mascot"
-//           />
-
-//           <Link className="actionBtn" href="/home">
-//             Let&apos;s Go
-//           </Link>
-//         </div>
-//       </div>
-//     </Styled>
-//   );
-// }
-
-import styled, { keyframes } from 'styled-components';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import UserDropdown from 'comps/UserDropdown';
+import styled, { keyframes } from "styled-components";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import UserDropdown from "comps/UserDropdown";
 
 // Gentle floating animation for the mascot to make it feel alive
 const float = keyframes`
@@ -184,15 +25,15 @@ const Styled = styled.div`
   .wrap {
     width: 100%;
     max-width: 1100px;
-    height: 85vh;
-    min-height: 600px;
+    min-height: auto;
+    height: auto;
     background-color: white;
     border-radius: 20px; /* Highly modern rounded corners */
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08); /* Deep, soft shadow */
     position: relative;
     display: flex;
     flex-direction: column;
-    padding: 40px 50px;
+    padding: 30px;
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -218,17 +59,19 @@ const Styled = styled.div`
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 10;
+
     gap: 1.5rem; /* Perfect spacing between text and mascot */
   }
 
   h1 {
-    font-family: var(--font1, 'Arial', sans-serif);
+    font-family: var(--font1, "Arial", sans-serif);
     font-weight: 900;
     font-size: clamp(2.5rem, 4.5vw, 4rem);
     color: #2b7d10;
     line-height: 1.1;
     margin: 0;
+    position: relative;
+    z-index: 10;
     text-align: center;
     letter-spacing: -1px;
     text-shadow: 2px 2px 0px rgba(43, 125, 16, 0.05);
@@ -237,16 +80,17 @@ const Styled = styled.div`
   .tagline {
     font-weight: 700;
     font-size: clamp(1.1rem, 2vw, 1.4rem);
-    font-family: var(--font2, 'Arial', sans-serif);
+    font-family: var(--font2, "Arial", sans-serif);
     color: #00b4d8;
     margin: 0;
     text-align: center;
   }
 
   .mascot {
-    height: 40vh;
+    height: 34vh;
     max-height: 380px;
     object-fit: contain;
+
     filter: drop-shadow(0 15px 20px rgba(0, 0, 0, 0.15));
     animation: ${float} 4s ease-in-out infinite;
     z-index: 10;
@@ -259,7 +103,7 @@ const Styled = styled.div`
     align-items: flex-end;
     width: 100%;
     z-index: 20;
-    padding-top: 20px;
+    padding-top: 15px;
   }
 
   // .actionBtn {
@@ -303,6 +147,50 @@ const Styled = styled.div`
     background: linear-gradient(135deg, #00c4e8, #0096c7);
   }
 
+  .language-row {
+    display: flex;
+    gap: 120px;
+    backdrop-filter: blur(6px);
+  }
+
+  .dropDown {
+    display: flex;
+    padding: 0 10px 0 0;
+    justify-content: space-between;
+    cursor: pointer;
+    background: linear-gradient(135deg, #2b7d10, #89ca73);
+    border-radius: 12px; /* Slightly tighter rounded corners */
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    width: 300px;
+    outline: none; /* 🔥 removes black outline */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+  .languageDrop {
+    font-size: 1.1rem;
+    font-family: var(--font1, sans-serif);
+    font-weight: bold;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    width: 285px;
+    border: none;
+    outline: none; /* 🔥 removes black outline */
+  }
+
+  .dropDown:hover {
+    box-shadow: 0 10px 22px rgba(0, 182, 9, 0.25);
+    background: linear-gradient(135deg, #3eac19, #9ce783);
+  }
+
+  .languageDrop option {
+    color: #27740e;
+    background: white; /* important */
+    font-size: bold;
+    overflow: hidden;
+    margin-right: 10px;
+  }
   /* --- 4. Background Icons --- */
   .bg-container {
     position: absolute;
@@ -311,7 +199,7 @@ const Styled = styled.div`
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 1;
+    z-index: 5;
   }
 
   .imgIcon {
@@ -321,11 +209,65 @@ const Styled = styled.div`
       0.9
     ); /* Scales them down slightly so they don't look cramped */
   }
+
+  @media (max-width: 768px) {
+    .wrap {
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .top-row {
+      justify-content: center;
+    }
+
+    .logo-img {
+      height: 50px;
+    }
+
+    .center-content {
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+    }
+
+    .tagline {
+      font-size: 0.8rem;
+    }
+
+    .language-row {
+      flex-direction: column; /* 🔥 stack dropdowns */
+      gap: 15px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .languageDrop {
+      width: 100%; /* 🔥 full width */
+      max-width: 280px;
+      font-size: 0.9rem;
+    }
+
+    .mascot {
+      height: 200px; /* 🔥 fixed smaller size */
+    }
+
+    .bottom-row {
+      justify-content: center; /* center button on mobile */
+    }
+
+    .actionBtn {
+      width: 100%;
+      max-width: 250px;
+      text-align: center;
+    }
+  }
 `;
 
 var bgList = [
   {
-    id: 'icon1.png',
+    id: "icon1.png",
     pos: [
       { x: 450, y: 30 },
       { x: 110, y: 220 },
@@ -333,7 +275,7 @@ var bgList = [
     ],
   },
   {
-    id: 'icon2.png',
+    id: "icon2.png",
     pos: [
       { x: 50, y: 100 },
       { x: 950, y: 100 },
@@ -341,7 +283,7 @@ var bgList = [
     ],
   },
   {
-    id: 'icon3.png',
+    id: "icon3.png",
     pos: [
       { x: 700, y: 20 },
       { x: 700, y: 350 },
@@ -349,21 +291,21 @@ var bgList = [
     ],
   },
   {
-    id: 'icon4.png',
+    id: "icon4.png",
     pos: [
       { x: 830, y: 250 },
       { x: 20, y: 550 },
     ],
   },
   {
-    id: 'icon5.png',
+    id: "icon5.png",
     pos: [
       { x: 950, y: 310 },
       { x: 170, y: 450 },
     ],
   },
   {
-    id: 'icon6.png',
+    id: "icon6.png",
     pos: [
       { x: 250, y: 80 },
       { x: 750, y: 500 },
@@ -374,7 +316,7 @@ var bgList = [
 
 export default function Intro(props) {
   const router = useRouter();
-  const basePath = router.basePath || '';
+  const basePath = router.basePath || "";
 
   // Converts your original coordinates into responsive percentages
   const getResponsivePos = (x, y) => {
@@ -423,6 +365,24 @@ export default function Intro(props) {
             <p className="tagline">
               Explore our learning modules and improve your language skills.
             </p>
+          </div>
+          <div className="language-row">
+            <div className="dropDown">
+              <select name="language" required className="languageDrop ">
+                <option value="">Select Grade</option>
+                <option value="free">Class I</option>
+                <option value="paid">Class II</option>
+                <option value="paid">Class III</option>
+              </select>
+            </div>
+            <div className="dropDown">
+              <select name="language" required className="languageDrop ">
+                <option value="">Select Language </option>
+                <option value="free">Hindi</option>
+                {/* <option value="paid">French</option>
+                <option value="paid">German</option> */}
+              </select>
+            </div>
           </div>
 
           <img

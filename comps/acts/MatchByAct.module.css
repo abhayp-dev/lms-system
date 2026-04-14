@@ -16,17 +16,17 @@
   --text: #222;
   border: 1px solid rgba(255, 255, 255, 0.6);
   width: 85%;
-  max-width: 900px;
+  max-width: 100%; /*Pankaj Sharma */
   height: 96%;
   border-radius: 15px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); /*Pankaj Sharma */
   padding: 24px 30px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   position: relative;
   margin: 15px auto;
-  background-color: transparent !important;
+  background-color: rgba(255, 255, 255, 0.1); /*Pankaj Sharma */
   color: var(--text);
   overflow: hidden; /* Locks the outer card */
 }
@@ -53,13 +53,12 @@
   align-self: center;
   margin-top: 0;
   flex-shrink: 0;
+  white-space: pre-line;
 }
 
 .matchArea {
-  /* background-color: rgba(240, 240, 232, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.1); */
+  background-color: rgba(255, 255, 248, 0.7); /*Pankaj Sharma */
   border-radius: 4px;
-  backdrop-filter: blur(4px);
   padding: 15px 20px;
 
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -67,7 +66,8 @@
   flex-grow: 1;
   overflow-y: auto; /* ONLY the white box scrolls! */
 }
-.matchArea::-webkit-scrollbar {
+/*Panka Sharma */ 
+/* .matchArea::-webkit-scrollbar {
   width: 10px;
 }
 .matchArea::-webkit-scrollbar-track {
@@ -75,8 +75,9 @@
 }
 .matchArea::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 8px;
-}
+  
+ } */
+
 
 .matchRow {
   display: flex;
@@ -192,6 +193,7 @@
   flex-shrink: 0;
 }
 .btnGroup {
+ 
   display: flex;
   gap: 10px;
 }
@@ -204,17 +206,29 @@
   font-weight: bold;
   color: #333;
 }
-.nextBtn {
-  padding: 10px 24px;
+.btn {
+  padding: 0 24px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  font-size: 15px;
+  height: 40px;
+  min-width: 100px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.primary {
   background: var(--accent);
   color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
+  transition: opacity 0.2s;
 }
-
+.primary:hover {
+  opacity: 0.9;
+}
 .resultBox {
   margin-top: 10px;
   padding: 12px 20px;

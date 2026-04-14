@@ -1,10 +1,10 @@
-// comps/acts/McqAct.js
-import React, { useState, useEffect } from 'react';
-import styles from './McqAct.module.css';
-import { apiService } from '../../utils/apiService';
+import React, { useState, useEffect } from "react";
+import styles from "./McqAct.module.css";
+import { apiService } from "../../utils/apiService";
+import Confetti from "react-confetti";
 
 function parseOptionsString(raw) {
-  return (raw || '')
+  return (raw || "")
     .split(/\n|,/)
     .map((s) => s.trim())
     .filter(Boolean);
@@ -21,14 +21,15 @@ function shuffleArray(arr) {
 
 function normalizeQuestions(raw) {
   return raw.map((q) => {
-    const original = q.qText || q.text || '';
-    const rawOpts = parseOptionsString(q.options || q.option || '');
+    const original = q.qText || q.text || "";
+    const rawOpts = parseOptionsString(q.options || q.option || "");
+
     let originalCorrectIndex = -1;
 
     const cleanedOpts = rawOpts.map((opt, idx) => {
-      if (opt.includes('*')) {
+      if (opt.includes("*")) {
         originalCorrectIndex = idx;
-        return opt.replace(/\*/g, '').trim();
+        return opt.replace(/\*/g, "").trim();
       }
       return opt;
     });
@@ -36,12 +37,15 @@ function normalizeQuestions(raw) {
     if (originalCorrectIndex === -1) originalCorrectIndex = 0;
 
     const order = shuffleArray(cleanedOpts.map((_, i) => i));
+
     const shuffled = [];
     let newCorrectIndex = -1;
 
     order.forEach((oldIndex, newIndex) => {
       shuffled.push(cleanedOpts[oldIndex]);
-      if (oldIndex === originalCorrectIndex) newCorrectIndex = newIndex;
+      if (oldIndex === originalCorrectIndex) {
+        newCorrectIndex = newIndex;
+      }
     });
 
     return {
@@ -51,6 +55,7 @@ function normalizeQuestions(raw) {
       correctIndex: newCorrectIndex,
       answered: false,
       userChoice: null,
+      selectedOption: null,
     };
   });
 }
@@ -60,88 +65,51 @@ export default function McqAct({ data }) {
   const [current, setCurrent] = useState(0);
   const [score, setScore] = useState(0);
   const [attempted, setAttempted] = useState(0);
-  const [status, setStatus] = useState('STARTED');
-  const [userId, setUserId] = useState(null);
+  const [status, setStatus] = useState("STARTED");
+  const [userId, setUserId] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [feedback, setFeedback] = useState("");
 
   const total = questions.length;
-  const activityId = data?.id || 'mcq_default';
+  const activityId = data?.id || "mcq_default";
+
+  const successMsgs = [
+    "🎉 Awesome!",
+    "🌟 Great job!",
+    "👏 Well done!",
+    "🥳 You got it!",
+  ];
+
+  const wrongMsgs = [
+    "❌ Oops! Try next one!",
+    "😅 Not quite!",
+    "🤔 Almost there!",
+    "🙈 Keep learning!",
+  ];
 
   useEffect(() => {
     if (!data) return;
 
-    let currentUserId = localStorage.getItem('user_email');
-    if (!currentUserId) {
-      currentUserId = localStorage.getItem('mcq_guest_id');
-      if (!currentUserId) {
-        currentUserId = 'guest_' + Math.floor(Math.random() * 1000000);
-        localStorage.setItem('mcq_guest_id', currentUserId);
-      }
-    }
+    const currentUserId = Number(
+      data.user_id || localStorage.getItem("user_id") || 0,
+    );
+
     setUserId(currentUserId);
-
-    // const initQuiz = async () => {
-    //   const raw = data.questions || [];
-    //   let initialQuestions = normalizeQuestions(raw);
-
-    //   try {
-    //     const ts = new Date().getTime();
-    //     const res = await fetch(
-    //       `${API_BASE}/progress/${currentUserId}/${activityId}?t=${ts}`
-    //     );
-
-    //     if (res.ok) {
-    //       const text = await res.text();
-    //       if (text && text.trim() !== '') {
-    //         let savedState = JSON.parse(text);
-
-    //         if (savedState.status !== 'empty') {
-    //           if (typeof savedState === 'string')
-    //             savedState = JSON.parse(savedState);
-
-    //           if (
-    //             savedState.questions &&
-    //             savedState.questions.length === initialQuestions.length
-    //           ) {
-    //             initialQuestions = savedState.questions;
-    //           }
-
-    //           const savedCurrent = savedState.current || 0;
-    //           const savedScore = savedState.score || 0;
-    //           const savedAttempted = savedState.attempted || 0;
-
-    //           setCurrent(savedCurrent);
-    //           setScore(savedScore);
-    //           setAttempted(savedAttempted);
-
-    //           if (
-    //             savedCurrent >= initialQuestions.length ||
-    //             (initialQuestions.length > 0 &&
-    //               savedAttempted === initialQuestions.length)
-    //           ) {
-    //             setStatus('SUMMARY');
-    //           }
-    //         }
-    //       }
-    //     }
-    //   } catch (err) {}
-
-    //   setQuestions(initialQuestions);
-    // };
 
     const initQuiz = async () => {
       const raw = data.questions || [];
       let initialQuestions = normalizeQuestions(raw);
 
       try {
-        // 1. Single clean call to your central service
-        const savedState = await apiService.getMcqProgress(
+        const response = await apiService.getMcqProgress(
           currentUserId,
-          activityId
+          activityId,
         );
 
-        // 2. Logic remains the same, but data is already parsed
-        if (savedState && savedState.status !== 'empty') {
+        const savedState = response.data || response;
+
+        if (savedState && savedState.status !== "empty") {
           if (
             savedState.questions &&
             savedState.questions.length === initialQuestions.length
@@ -154,112 +122,162 @@ export default function McqAct({ data }) {
           setAttempted(savedState.attempted || 0);
 
           const isFinished =
-            (savedState.current || 0) >= initialQuestions.length ||
-            savedState.attempted === initialQuestions.length;
+            savedState.attempted >= initialQuestions.length ||
+            savedState.current >= initialQuestions.length;
 
           if (isFinished && initialQuestions.length > 0) {
-            setStatus('SUMMARY');
+            setStatus("SUMMARY");
           }
         }
       } catch (err) {
-        console.error('Error fetching progress:', err);
+        console.error("Error fetching progress:", err);
       }
 
       setQuestions(initialQuestions);
     };
+
     initQuiz();
   }, [data, activityId]);
-
-  const handleOptionClick = async (idx) => {
-    const q = questions[current];
-    if (q.answered) return;
-
-    const updatedQuestions = [...questions];
-    const activeQ = updatedQuestions[current];
-
-    activeQ.answered = true;
-    activeQ.userChoice = idx;
-
-    let newScore = score;
-    if (idx === activeQ.correctIndex) {
-      newScore += 1;
-    }
-    const newAttempted = attempted + 1;
-
-    setQuestions(updatedQuestions);
-    setScore(newScore);
-    setAttempted(newAttempted);
-
-    saveProgressAPI(updatedQuestions, current, newScore, newAttempted);
-  };
 
   const saveProgressAPI = async (
     qs,
     currIdx,
     currentScore,
     currentAttempted,
-    overrideStatus = 'IN_PROGRESS'
+    overrideStatus = "IN_PROGRESS",
   ) => {
     if (!userId) return;
+
     const stateToSave = {
       current: currIdx,
       score: currentScore,
       attempted: currentAttempted,
       questions: qs,
       total: qs.length,
+      status: overrideStatus,
     };
 
     try {
-      await fetch(`${API_BASE}/progress`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userId,
-          activity_id: activityId,
-          progress_json: JSON.stringify(stateToSave),
-          score: currentScore,
-          attempted: currentAttempted,
-          status: overrideStatus,
-        }),
+      await apiService.saveMcqProgress({
+        user_id: userId,
+        activity_id: activityId,
+        progress_json: JSON.stringify(stateToSave),
+        score: currentScore,
+        attempted: currentAttempted,
+        status: overrideStatus,
       });
-    } catch (err) {}
+    } catch (err) {
+      console.error("Failed to save progress", err);
+    }
   };
 
   const completeQuizAPI = async () => {
     if (!userId) return;
+
     try {
-      await fetch(`${API_BASE}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userId,
-          activity_id: activityId,
-          score: score,
-          attempted: attempted,
-        }),
+      await apiService.completeMcq({
+        user_id: userId,
+        activity_id: activityId,
+        score,
+        attempted,
       });
-    } catch (err) {}
+    } catch (err) {
+      console.error("Failed to complete quiz", err);
+    }
+  };
+
+  const handleOptionClick = (idx) => {
+    const updatedQuestions = [...questions];
+    const activeQ = updatedQuestions[current];
+
+    if (activeQ.answered) return;
+
+    activeQ.selectedOption = idx;
+
+    setQuestions(updatedQuestions);
+  };
+
+  const handleSubmit = async () => {
+    const updatedQuestions = [...questions];
+    const activeQ = updatedQuestions[current];
+
+    if (activeQ.selectedOption === null) return;
+
+    activeQ.answered = true;
+    activeQ.userChoice = activeQ.selectedOption;
+
+    let newScore = score;
+    let isCorrect = false;
+
+    if (activeQ.userChoice === activeQ.correctIndex) {
+      newScore += 1;
+      isCorrect = true;
+    }
+
+    const newAttempted = attempted + 1;
+
+    setQuestions(updatedQuestions);
+    setScore(newScore);
+    setAttempted(newAttempted);
+
+    if (isCorrect) {
+      setFeedback(successMsgs[Math.floor(Math.random() * successMsgs.length)]);
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 2000);
+    } else {
+      setFeedback(wrongMsgs[Math.floor(Math.random() * wrongMsgs.length)]);
+    }
+
+    await saveProgressAPI(updatedQuestions, current, newScore, newAttempted);
   };
 
   const handleNext = async () => {
+    setFeedback("");
     setIsSaving(true);
+
     if (current + 1 < total) {
       const nextIdx = current + 1;
+
       await saveProgressAPI(questions, nextIdx, score, attempted);
+
       setCurrent(nextIdx);
     } else {
-      await saveProgressAPI(questions, current, score, attempted, 'COMPLETED');
+      await saveProgressAPI(questions, total, score, attempted, "COMPLETED");
+
       await completeQuizAPI();
-      setStatus('SUMMARY');
+
+      setStatus("SUMMARY");
     }
+
     setIsSaving(false);
+  };
+
+  const resetQuiz = async () => {
+    if (!window.confirm("Are you sure you want to reset this activity?"))
+      return;
+
+    const raw = data.questions || [];
+    const resetQuestions = normalizeQuestions(raw);
+
+    setQuestions(resetQuestions);
+    setCurrent(0);
+    setScore(0);
+    setAttempted(0);
+    setStatus("STARTED");
+    setFeedback("");
+
+    await saveProgressAPI(resetQuestions, 0, 0, 0, "IN_PROGRESS");
   };
 
   const handleFinalNext = () => {
     try {
       window.parent.postMessage(
-        JSON.stringify({ done: true, score: score, total: attempted }),
-        '*'
+        JSON.stringify({
+          done: true,
+          score,
+          total: attempted,
+        }),
+        "*",
       );
     } catch (_) {}
   };
@@ -267,301 +285,144 @@ export default function McqAct({ data }) {
   if (questions.length === 0) return null;
 
   const currentQ = questions[current];
-  const isSummary = status === 'SUMMARY';
+  const isSummary = status === "SUMMARY";
 
-  // return (
-  //   <div className={styles.container}>
-  //     {!isSummary ? (
-  //       <div className={styles.main}>
-  //         {/* TITLE */}
-  //         <div className={styles.title} id="actTitle">
-  //           {data.title || 'Multiple Choice Question'}
-  //         </div>
-
-  //         <div id="questionTitle" className={styles.small}>
-  //           Question {current + 1} of {total}
-  //         </div>
-
-  //         <div id="qwrap" className={styles.qwrap}>
-  //           {/* Passage Box */}
-  //           {data.passage && (
-  //             <div className={styles.passageBox}>{data.passage}</div>
-  //           )}
-
-  //           {/* Question Text */}
-  //           <div
-  //             className={styles.question}
-  //             dangerouslySetInnerHTML={{ __html: currentQ.qText }}
-  //           />
-
-  //           {/* Options */}
-  //           <div className={styles.options}>
-  //             {currentQ.options.map((opt, i) => {
-  //               let optionClass = styles.option;
-  //               if (currentQ.answered) {
-  //                 if (i === currentQ.correctIndex)
-  //                   optionClass += ` ${styles.correct}`;
-  //                 else if (i === currentQ.userChoice)
-  //                   optionClass += ` ${styles.wrong}`;
-  //                 if (i === currentQ.userChoice)
-  //                   optionClass += ` ${styles.selected}`;
-  //               }
-
-  //               return (
-  //                 <div
-  //                   key={i}
-  //                   className={optionClass}
-  //                   data-index={i}
-  //                   onClick={() => handleOptionClick(i)}
-  //                 >
-  //                   <span className={styles.radio}></span>
-  //                   <div className={styles.optionLabel}>{opt}</div>
-  //                 </div>
-  //               );
-  //             })}
-  //           </div>
-
-  //           {/* Marks rendered strictly inside qwrap like original HTML */}
-  //           {currentQ.answered &&
-  //             currentQ.userChoice === currentQ.correctIndex && (
-  //               <div
-  //                 id="rightMark"
-  //                 className={`${styles.mark} ${styles.right}`}
-  //               >
-  //                 ✔
-  //               </div>
-  //             )}
-  //           {currentQ.answered &&
-  //             currentQ.userChoice !== currentQ.correctIndex && (
-  //               <div
-  //                 id="wrongMark"
-  //                 className={`${styles.mark} ${styles.wrong}`}
-  //               >
-  //                 ✖
-  //               </div>
-  //             )}
-  //         </div>
-
-  //         {/* CONTROLS */}
-  //         <div className={styles.controls}>
-  //           <div className={styles.score} id="scoreBox">
-  //             Score : {score} / {total}
-  //           </div>
-  //           <div style={{ marginLeft: 'auto' }}>
-  //             <button
-  //               className={`${styles.btn} ${styles.primary}`}
-  //               id="nextBtn"
-  //               style={{ display: currentQ.answered ? 'inline-block' : 'none' }}
-  //               onClick={handleNext}
-  //               disabled={isSaving}
-  //             >
-  //               {isSaving
-  //                 ? 'Saving...'
-  //                 : current + 1 === total
-  //                   ? 'Finish'
-  //                   : 'Next'}
-  //             </button>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     ) : (
-  //       /* FINAL SUMMARY VIEW */
-  //       <div
-  //         id="finalWrap"
-  //         className={styles.main}
-  //         style={{ marginTop: '18px' }}
-  //       >
-  //         <div className={styles.title}>You have completed this activity.</div>
-
-  //         <div id="summaryList" className={styles.summary}>
-  //           {questions.map((q, i) => {
-  //             const isCorrect = q.userChoice === q.correctIndex;
-  //             return (
-  //               <div
-  //                 key={i}
-  //                 className={styles.summaryItem}
-  //                 style={{ padding: '10px 0' }}
-  //               >
-  //                 <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-  //                   {i + 1}. {q.qTextRaw}
-  //                 </div>
-  //                 <div style={{ fontSize: '0.9em' }}>
-  //                   Your Answer:{' '}
-  //                   <span
-  //                     style={{
-  //                       color: isCorrect ? '#2ecc71' : '#e74c3c',
-  //                       fontWeight: 'bold',
-  //                     }}
-  //                   >
-  //                     {q.options[q.userChoice] || 'Skipped'}
-  //                   </span>
-  //                   {!isCorrect && (
-  //                     <span style={{ color: '#777', marginLeft: '8px' }}>
-  //                       (Correct: {q.options[q.correctIndex]})
-  //                     </span>
-  //                   )}
-  //                 </div>
-  //               </div>
-  //             );
-  //           })}
-  //         </div>
-
-  //         <div
-  //           style={{
-  //             display: 'flex',
-  //             alignItems: 'center',
-  //             justifyContent: 'space-between',
-  //             marginTop: '12px',
-  //           }}
-  //         >
-  //           <div className={styles.small} id="finalScore">
-  //             Final Score: {score} / {attempted}
-  //           </div>
-  //           <button
-  //             className={`${styles.btn} ${styles.primary}`}
-  //             id="finalNextBtn"
-  //             onClick={handleFinalNext}
-  //           >
-  //             Next
-  //           </button>
-  //         </div>
-  //       </div>
-  //     )}
-  //   </div>
-  // );
   return (
     <div className={styles.wrapper}>
+      {showConfetti && <Confetti />}
+
       <div className={styles.container}>
         {!isSummary ? (
           <div className={styles.main}>
-            {/* TITLE */}
+
             <div className={styles.title} id="actTitle">
-              {data.title || 'Multiple Choice Question'}
+              {(data.title || "Multiple Choice Question").replace(
+                /\s*\(/,
+                "\n(",
+              )}
             </div>
 
-            <div id="questionTitle" className={styles.small}>
+            <div className={styles.small}>
               Question {current + 1} of {total}
             </div>
 
-            <div id="qwrap" className={styles.qwrap}>
-              {/* Passage Box */}
+            <div className={styles.qwrap}>
               {data.passage && (
                 <div className={styles.passageBox}>{data.passage}</div>
               )}
 
-              {/* Question Text */}
               <div
                 className={styles.question}
-                dangerouslySetInnerHTML={{ __html: currentQ.qText }}
+                dangerouslySetInnerHTML={{
+                  __html: currentQ.qText,
+                }}
               />
 
-              {/* Options */}
               <div className={styles.options}>
                 {currentQ.options.map((opt, i) => {
-                  let optionClass = styles.option;
+                  const isSelected = currentQ.selectedOption === i;
+
+                  const isCorrectAns = currentQ.correctIndex === i;
+
+                  let labelClass = styles.optLabel;
+                  let radioClass = styles.radio;
+
+                  if (!currentQ.answered && isSelected) {
+                    labelClass += ` ${styles.selected}`;
+                  }
+
                   if (currentQ.answered) {
-                    if (i === currentQ.correctIndex)
-                      optionClass += ` ${styles.correct}`;
-                    else if (i === currentQ.userChoice)
-                      optionClass += ` ${styles.wrong}`;
-                    if (i === currentQ.userChoice)
-                      optionClass += ` ${styles.selected}`;
+                    if (isCorrectAns) labelClass += ` ${styles.correct}`;
+                    else if (isSelected) labelClass += ` ${styles.wrong}`;
+                  }
+
+                  if (isSelected) {
+                    radioClass += ` ${styles.checked}`;
                   }
 
                   return (
                     <div
                       key={i}
-                      className={optionClass}
-                      data-index={i}
+                      className={styles.option}
                       onClick={() => handleOptionClick(i)}
                     >
-                      <span className={styles.radio}></span>
-                      <div className={styles.optionLabel}>{opt}</div>
+                      <span className={radioClass}></span>
+                      <div className={labelClass}>{opt}</div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Marks rendered strictly inside qwrap like original HTML */}
-              {currentQ.answered &&
-                currentQ.userChoice === currentQ.correctIndex && (
-                  <div
-                    id="rightMark"
-                    className={`${styles.mark} ${styles.right}`}
-                  >
-                    ✔
-                  </div>
-                )}
-              {currentQ.answered &&
-                currentQ.userChoice !== currentQ.correctIndex && (
-                  <div
-                    id="wrongMark"
-                    className={`${styles.mark} ${styles.wrong}`}
-                  >
-                    ✖
-                  </div>
-                )}
+              {currentQ.answered && (
+                <div
+                  className={`${styles.feedback} ${
+                    currentQ.userChoice === currentQ.correctIndex
+                      ? styles.correct
+                      : styles.wrong
+                  }`}
+                >
+                  {feedback}
+                </div>
+              )}
             </div>
 
-            {/* CONTROLS */}
             <div className={styles.controls}>
-              <div className={styles.score} id="scoreBox">
+              <div className={styles.score}>
                 Score : {score} / {total}
               </div>
-              <div style={{ marginLeft: 'auto' }}>
-                <button
-                  className={`${styles.btn} ${styles.primary}`}
-                  id="nextBtn"
-                  style={{
-                    display: currentQ.answered ? 'inline-block' : 'none',
-                  }}
-                  onClick={handleNext}
-                  disabled={isSaving}
-                >
-                  {isSaving
-                    ? 'Saving...'
+
+              <button
+                className={`${styles.btn} ${styles.primary}`}
+                onClick={!currentQ.answered ? handleSubmit : handleNext}
+                disabled={
+                  !currentQ.answered && currentQ.selectedOption === null
+                }
+              >
+                {!currentQ.answered
+                  ? "Submit"
+                  : isSaving
+                    ? "Saving..."
                     : current + 1 === total
-                      ? 'Finish'
-                      : 'Next'}
-                </button>
-              </div>
+                      ? "Finish"
+                      : "Next"}
+              </button>
             </div>
           </div>
         ) : (
-          /* FINAL SUMMARY VIEW */
-          <div
-            id="finalWrap"
-            className={styles.main}
-            style={{ marginTop: '18px' }}
-          >
+          <div className={styles.main}>
             <div className={styles.title}>
               You have completed this activity.
             </div>
 
-            <div id="summaryList" className={styles.summary}>
+            <div className={styles.summary}>
               {questions.map((q, i) => {
                 const isCorrect = q.userChoice === q.correctIndex;
+
                 return (
-                  <div
-                    key={i}
-                    className={styles.summaryItem}
-                    style={{ padding: '10px 0' }}
-                  >
-                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                      {i + 1}. {q.qTextRaw}
+                  <div key={i} className={styles.summaryItem}>
+                    <div>
+                      <strong>
+                        {i + 1}. {q.qTextRaw}
+                      </strong>
                     </div>
-                    <div style={{ fontSize: '0.9em' }}>
-                      Your Answer:{' '}
+
+                    <div>
+                      Your Answer:{" "}
                       <span
                         style={{
-                          color: isCorrect ? '#2ecc71' : '#e74c3c',
-                          fontWeight: 'bold',
+                          color: isCorrect ? "#2ecc71" : "#e74c3c",
+                          fontWeight: "bold",
                         }}
                       >
-                        {q.options[q.userChoice] || 'Skipped'}
+                        {q.options[q.userChoice] || "Skipped"}
                       </span>
                       {!isCorrect && (
-                        <span style={{ color: '#777', marginLeft: '8px' }}>
+                        <span
+                          style={{
+                            color: "#777",
+                            marginLeft: 8,
+                          }}
+                        >
                           (Correct: {q.options[q.correctIndex]})
                         </span>
                       )}
@@ -573,22 +434,31 @@ export default function McqAct({ data }) {
 
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginTop: '12px',
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: 12,
+                gap: 10,
               }}
             >
-              <div className={styles.small} id="finalScore">
+              <div className={styles.small}>
                 Final Score: {score} / {attempted}
               </div>
-              <button
-                className={`${styles.btn} ${styles.primary}`}
-                id="finalNextBtn"
-                onClick={handleFinalNext}
-              >
-                Next
-              </button>
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  className={`${styles.btn} ${styles.primary}`}
+                  onClick={resetQuiz}
+                >
+                  Reset Activity
+                </button>
+
+                <button
+                  className={`${styles.btn} ${styles.primary}`}
+                  onClick={handleFinalNext}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         )}

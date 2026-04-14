@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import styles from './ClassifySentenceAct.module.css';
+import React, { useState, useEffect } from "react";
+import styles from "./ClassifySentenceAct.module.css";
 
 function shuffleArray(arr) {
   const a = [...arr];
@@ -18,28 +18,28 @@ function parseClassify(text) {
     .filter(Boolean);
 
   return lines.map((line) => {
-    const parts = line.split('|').map((p) => p.trim());
-    let qText = '',
-      optsRaw = '';
+    const parts = line.split("|").map((p) => p.trim());
+    let qText = "",
+      optsRaw = "";
 
     if (parts.length === 3) {
       qText = parts[1];
       optsRaw = parts[2];
     } else {
       qText = parts[0];
-      optsRaw = parts[1] || '';
+      optsRaw = parts[1] || "";
     }
 
     const rawOpts = optsRaw
-      .split(',')
+      .split(",")
       .map((o) => o.trim())
       .filter(Boolean);
     let correctIdx = -1;
 
     const cleanOpts = rawOpts.map((o, i) => {
-      if (o.startsWith('*')) {
+      if (o.startsWith("*")) {
         correctIdx = i;
-        return o.replace(/^\*+/, '').trim();
+        return o.replace(/^\*+/, "").trim();
       }
       return o;
     });
@@ -69,13 +69,14 @@ export default function ClassifySentenceAct({ data }) {
   const [current, setCurrent] = useState(0);
   const [score, setScore] = useState(0);
   const [attempted, setAttempted] = useState(0);
-  const [status, setStatus] = useState('PLAYING');
+  const [status, setStatus] = useState("PLAYING");
 
-  const title = data?.title || 'Pick the right option';
+  // const title = data?.title || "Pick the right option";
+  const title = (data?.title || "Some Title").replace(/\s*\(/, "\n(");
 
   useEffect(() => {
     if (!data) return;
-    const rawText = data.text || '';
+    const rawText = data.text || "";
     let parsedQs = parseClassify(rawText);
     parsedQs = shuffleArray(parsedQs);
     setQuestions(parsedQs);
@@ -98,7 +99,7 @@ export default function ClassifySentenceAct({ data }) {
     if (current + 1 < questions.length) {
       setCurrent(current + 1);
     } else {
-      setStatus('SUMMARY');
+      setStatus("SUMMARY");
     }
   };
 
@@ -106,7 +107,7 @@ export default function ClassifySentenceAct({ data }) {
     try {
       window.parent.postMessage(
         JSON.stringify({ done: true, score: score, total: attempted }),
-        '*'
+        "*",
       );
     } catch (_) {}
   };
@@ -115,16 +116,16 @@ export default function ClassifySentenceAct({ data }) {
     const handleKeyDown = (e) => {
       const q = questions[current];
       if (
-        e.key === 'Enter' &&
+        e.key === "Enter" &&
         q &&
         q.userChoice !== null &&
-        status === 'PLAYING'
+        status === "PLAYING"
       ) {
         handleNext();
       }
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   });
 
   if (questions.length === 0) return null;
@@ -132,15 +133,34 @@ export default function ClassifySentenceAct({ data }) {
   const q = questions[current];
   const total = questions.length;
 
+  const resetQuiz = () => {
+    if (!window.confirm("Are you sure you want to reset this activity?"))
+      return;
+
+    const rawText = data?.text || "";
+    let parsedQs = parseClassify(rawText);
+    parsedQs = shuffleArray(parsedQs);
+
+    setQuestions(parsedQs);
+    setCurrent(0);
+    setScore(0);
+    setAttempted(0);
+    setStatus("PLAYING");
+  };
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.container}>
         <div className={styles.wrap}>
-          <div className={styles.title} id="actTitle">
+          {/* <div className={styles.title} id="actTitle">
             {title}
-          </div>
+          </div> */}
 
-          {status === 'PLAYING' ? (
+          <h2 className={styles.title}>
+            {(data.title || "Join the Words").replace(/\s*\(/, "\n(")}
+          </h2>
+
+          {status === "PLAYING" ? (
             <div className={styles.card} id="cardRoot">
               {/* Wrapped in a flex container for side-by-side alignment */}
               <div className={styles.questionHeader}>
@@ -175,13 +195,13 @@ export default function ClassifySentenceAct({ data }) {
                       {opt}
                       <span
                         className={`${styles.markIcon} ${styles.tick}`}
-                        style={{ display: showTick ? 'block' : 'none' }}
+                        style={{ display: showTick ? "block" : "none" }}
                       >
                         ✓
                       </span>
                       <span
                         className={`${styles.markIcon} ${styles.cross}`}
-                        style={{ display: showCross ? 'block' : 'none' }}
+                        style={{ display: showCross ? "block" : "none" }}
                       >
                         ✘
                       </span>
@@ -190,7 +210,7 @@ export default function ClassifySentenceAct({ data }) {
                 })}
               </div>
 
-              <div style={{ height: '18px' }}></div>
+              <div style={{ height: "18px" }}></div>
 
               <div className={styles.controlsRow}>
                 <div className={styles.score} id="scoreBox">
@@ -203,7 +223,7 @@ export default function ClassifySentenceAct({ data }) {
                     disabled={q.userChoice === null}
                     onClick={handleNext}
                   >
-                    {current + 1 === total ? 'Finish' : 'Next'}
+                    {current + 1 === total ? "Finish" : "Next"}
                   </button>
                 </div>
               </div>
@@ -213,28 +233,28 @@ export default function ClassifySentenceAct({ data }) {
             <div
               id="finalWrap"
               className={`${styles.card} ${styles.summaryCard}`}
-              style={{ marginTop: '18px' }}
+              style={{ marginTop: "18px" }}
             >
-              <div style={{ fontSize: '18px', fontWeight: 600 }}>
+              <div style={{ fontSize: "18px", fontWeight: 600 }}>
                 You have completed this activity.
               </div>
               <div className={styles.summary} id="summaryList">
                 {questions.map((sq, i) => {
                   const user =
                     sq.userChoice === null
-                      ? '(no answer)'
+                      ? "(no answer)"
                       : sq.options[sq.userChoice];
                   const correct = sq.options[sq.correctIndex];
                   const color =
-                    sq.userChoice === sq.correctIndex ? 'green' : 'red';
+                    sq.userChoice === sq.correctIndex ? "green" : "red";
 
                   return (
                     <div key={i} className={styles.summaryItem}>
-                      <strong>{i + 1})</strong>{' '}
+                      <strong>{i + 1})</strong>{" "}
                       <span dangerouslySetInnerHTML={{ __html: sq.qText }} />
                       <br />
                       Answer: <span style={{ color: color }}>{user}</span>
-                      <span style={{ color: '#777', marginLeft: '8px' }}>
+                      <span style={{ color: "#777", marginLeft: "8px" }}>
                         — Correct: <strong>{correct}</strong>
                       </span>
                     </div>
@@ -244,26 +264,37 @@ export default function ClassifySentenceAct({ data }) {
 
               <div
                 style={{
-                  marginTop: '10px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  marginTop: "10px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "10px",
                 }}
               >
                 <div
                   className={styles.small}
                   id="finalScore"
-                  style={{ fontSize: '14px' }}
+                  style={{ fontSize: "14px" }}
                 >
                   Score: {score} / {attempted}
                 </div>
-                <button
-                  className={styles.nextBtn}
-                  id="doneBtn"
-                  onClick={handleDone}
-                >
-                  Next
-                </button>
+
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    className={`${styles.btn} ${styles.primary}`}
+                    onClick={resetQuiz}
+                  >
+                    Reset Activity
+                  </button>
+
+                  <button
+                    className={`${styles.btn} ${styles.primary}`}
+                    id="doneBtn"
+                    onClick={handleDone}
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
           )}

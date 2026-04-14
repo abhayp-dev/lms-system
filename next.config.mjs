@@ -1,28 +1,25 @@
+// /** @type {import('next').NextConfig} */
+// const nextConfig = {
+//   compiler: {
+//     styledComponents: true,
+//   },
+//   images: {
+//     unoptimized: true,
+//   },
+// };
+
+// export default nextConfig;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  output: "export", // 👈 this enables static export to /out folder
 
-  basePath: '/lms-system',
-  assetPrefix: '/lms-system',
-
-  // ⭐⭐⭐ REQUIRED FOR HYDRATION FIX
   compiler: {
     styledComponents: true,
   },
 
   images: {
-    unoptimized: true,
-  },
-
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/lms-system',
-        basePath: false,
-        permanent: true,
-      },
-    ];
+    unoptimized: true, // required for static export
   },
 };
 

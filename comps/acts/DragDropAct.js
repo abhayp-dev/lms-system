@@ -1,12 +1,12 @@
 // comps/acts/DragDropAct.js
-import React, { useState, useEffect } from 'react';
-import styles from './DragDropAct.module.css';
+import React, { useState, useEffect } from "react";
+import styles from "./DragDropAct.module.css";
 
 // Helpers
 function fixImgPath(src) {
-  if (!src) return '';
-  if (src.startsWith('http')) return src;
-  if (src.startsWith('/img')) return '/lms-system' + src;
+  if (!src) return "";
+  if (src.startsWith("http")) return src;
+  if (src.startsWith("/img")) return "/lms-system" + src;
   return src;
 }
 
@@ -20,9 +20,9 @@ function shuffleArray(arr) {
 }
 
 export default function DragDropAct({ data }) {
-  const [appState, setAppState] = useState('LOADING'); // LOADING, PLAYING, EVALUATED
-  const [mode, setMode] = useState('FLOW'); // FLOW or ABSOLUTE
-  const [title, setTitle] = useState('');
+  const [appState, setAppState] = useState("LOADING"); // LOADING, PLAYING, EVALUATED
+  const [mode, setMode] = useState("FLOW"); // FLOW or ABSOLUTE
+  const [title, setTitle] = useState("");
 
   // Flow Mode Data
   const [flowImage, setFlowImage] = useState(null);
@@ -39,25 +39,32 @@ export default function DragDropAct({ data }) {
   // Mobile UI Fixes
   const [isDragging, setIsDragging] = useState(false);
 
-  useEffect(() => {
+  const initializeActivity = () => {
     if (!data) return;
 
-    // Safely extract the nested payload from your original dragdrop.js format
     const d = data.data && data.data.words ? data.data : data;
     if (!d || !d.words) {
-      console.error('Invalid DragDrop Data');
+      console.error("Invalid DragDrop Data");
       return;
     }
+    useEffect(() => {
+      initializeActivity();
+    }, [data]);
 
-    setTitle(d.title || data.label || 'Drag the words to the correct place');
+    // setTitle(d.title || data.label || "Drag the words to the correct place");
+    setTitle(
+      (d.title || data.label || "Drag the words to the correct place").replace(
+        /\s*\(/,
+        "\n(",
+      ),
+    );
 
-    // Detect Mode
     const textObj =
-      d.svg && d.svg.paths ? d.svg.paths.find((p) => p.type === 'text') : null;
-    const isFlow = !!(textObj && textObj.text);
-    setMode(isFlow ? 'FLOW' : 'ABSOLUTE');
+      d.svg && d.svg.paths ? d.svg.paths.find((p) => p.type === "text") : null;
 
-    // Extract & Shuffle Options (Unique words only)
+    const isFlow = !!(textObj && textObj.text);
+    setMode(isFlow ? "FLOW" : "ABSOLUTE");
+
     const wordsList = d.words.map((w) => w.word);
     const uniqueOptions = shuffleArray([...new Set(wordsList)]);
     setOptions(uniqueOptions);
@@ -65,34 +72,30 @@ export default function DragDropAct({ data }) {
     const initialZones = [];
 
     if (isFlow) {
-      // Setup Flow Mode
-      const imgPath = d.svg.paths.find((p) => p.type === 'image');
-      if (imgPath) setFlowImage(fixImgPath(imgPath.src));
+      const imgPath = d.svg.paths.find((p) => p.type === "image");
+      setFlowImage(imgPath ? fixImgPath(imgPath.src) : null);
 
-      // We split the raw HTML text by the _______ markers
       const rawHtml = textObj.text;
       const parts = rawHtml.split(/(_{2,})/g);
       setFlowTextParts(parts);
 
-      // Create answer zones for each blank found
       let blankCount = 0;
       parts.forEach((part) => {
         if (part.match(/_{2,}/)) {
           initialZones.push({
             index: blankCount,
-            correctWord: d.words[blankCount] ? d.words[blankCount].word : '',
+            correctWord: d.words[blankCount]?.word || "",
             userWord: null,
           });
           blankCount++;
         }
       });
     } else {
-      // Setup Absolute Mode
       const rows = [];
+
       d.words.forEach((w, i) => {
-        // Try matching index, or just grab the first image available
-        let imgP = d.svg.paths.filter((p) => p.type === 'image')[i];
-        if (!imgP) imgP = d.svg.paths.find((p) => p.type === 'image');
+        let imgP = d.svg.paths.filter((p) => p.type === "image")[i];
+        if (!imgP) imgP = d.svg.paths.find((p) => p.type === "image");
 
         rows.push({
           index: i,
@@ -105,32 +108,33 @@ export default function DragDropAct({ data }) {
           userWord: null,
         });
       });
+
       setAbsRows(rows);
     }
 
     setZones(initialZones);
-    setAppState('PLAYING');
-  }, [data]);
+    setAppState("PLAYING");
+  };
 
   // GLOBALLY LOCK BODY SCROLL DURING DRAG FOR MOBILE UX
   useEffect(() => {
     if (isDragging) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
     } else {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
     }
     return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
     };
   }, [isDragging]);
 
   // --- Handlers ---
   const handleDragStart = (e, optText) => {
     setIsDragging(true);
-    e.dataTransfer.setData('text/plain', optText);
+    e.dataTransfer.setData("text/plain", optText);
   };
 
   const handleDragEnd = () => setIsDragging(false);
@@ -140,9 +144,9 @@ export default function DragDropAct({ data }) {
     setDragOverIdx(null);
     setIsDragging(false);
 
-    if (appState === 'EVALUATED') return;
+    if (appState === "EVALUATED") return;
 
-    const droppedText = e.dataTransfer.getData('text/plain');
+    const droppedText = e.dataTransfer.getData("text/plain");
     if (!droppedText) return;
 
     const newZones = [...zones];
@@ -152,20 +156,20 @@ export default function DragDropAct({ data }) {
     // Auto-validate immediately if all blanks are filled!
     const allFilled = newZones.every((z) => z.userWord !== null);
     if (allFilled) {
-      setAppState('EVALUATED');
+      setAppState("EVALUATED");
     }
   };
 
   const handleDragOver = (e, index) => {
     e.preventDefault();
-    if (appState !== 'EVALUATED') setDragOverIdx(index);
+    if (appState !== "EVALUATED") setDragOverIdx(index);
   };
 
   const handleDragLeave = () => setDragOverIdx(null);
 
   const handleNextClick = () => {
     try {
-      window.parent.postMessage(JSON.stringify({ done: true }), '*');
+      window.parent.postMessage(JSON.stringify({ done: true }), "*");
     } catch (e) {}
   };
 
@@ -174,16 +178,21 @@ export default function DragDropAct({ data }) {
     const zone = zones[index];
     if (!zone) return null;
 
-    const isEvaluated = appState === 'EVALUATED';
+    const isEvaluated = appState === "EVALUATED";
     const isHovered = dragOverIdx === index;
     const isCorrect = isEvaluated && zone.userWord === zone.correctWord;
     const isWrong = isEvaluated && zone.userWord !== zone.correctWord;
 
-    let boxClass = mode === 'FLOW' ? styles.dropZoneFlow : styles.dropZoneAbs;
+    let boxClass = mode === "FLOW" ? styles.dropZoneFlow : styles.dropZoneAbs;
     if (isHovered) boxClass += ` ${styles.dropZoneHover}`;
     if (isCorrect) boxClass += ` ${styles.correct}`;
     if (isWrong) boxClass += ` ${styles.wrong}`;
+    const resetActivity = () => {
+      if (!window.confirm("Are you sure you want to reset this activity?"))
+        return;
 
+      initializeActivity();
+    };
     return (
       <React.Fragment key={`zone-${index}`}>
         <span
@@ -213,7 +222,7 @@ export default function DragDropAct({ data }) {
               className={styles.flowImg}
             />
             {/* 🟢 ADDED: Bouncing Scroll Hint */}
-            {appState === 'PLAYING' && (
+            {appState === "PLAYING" && (
               <div className={styles.scrollHint}>Scroll Down To Answer 👇</div>
             )}
           </>
@@ -245,14 +254,14 @@ export default function DragDropAct({ data }) {
     );
   };
 
-  if (appState === 'LOADING') return null;
+  if (appState === "LOADING") return null;
 
   const usedOptions = zones.map((z) => z.userWord).filter(Boolean);
 
   return (
     <div
       className={styles.wrapper}
-      style={{ overflowY: isDragging ? 'hidden' : 'auto' }}
+      style={{ overflowY: isDragging ? "hidden" : "auto" }}
     >
       <div className={styles.mainCard}>
         <div className={styles.mainCardInner}>
@@ -261,13 +270,13 @@ export default function DragDropAct({ data }) {
           {/* The Scrollable Game Area */}
           <div
             className={styles.gameArea}
-            style={{ overflowY: isDragging ? 'hidden' : 'auto' }}
+            style={{ overflowY: isDragging ? "hidden" : "auto" }}
           >
-            {mode === 'FLOW' ? renderFlowMode() : renderAbsoluteMode()}
+            {mode === "FLOW" ? renderFlowMode() : renderAbsoluteMode()}
           </div>
 
           {/* Word Bank safely locked to the bottom! */}
-          {appState === 'PLAYING' && (
+          {appState === "PLAYING" && (
             <div className={styles.wordBank}>
               {options.map((opt, i) => (
                 <button
@@ -275,7 +284,7 @@ export default function DragDropAct({ data }) {
                   draggable
                   onDragStart={(e) => handleDragStart(e, opt)}
                   onDragEnd={handleDragEnd}
-                  className={`${styles.option} ${usedOptions.includes(opt) ? styles.used : ''}`}
+                  className={`${styles.option} ${usedOptions.includes(opt) ? styles.used : ""}`}
                 >
                   {opt}
                 </button>
@@ -283,9 +292,19 @@ export default function DragDropAct({ data }) {
             </div>
           )}
 
-          {appState === 'EVALUATED' && (
+          {appState === "EVALUATED" && (
             <div className={styles.controlsRow}>
-              <button className={styles.nextBtn} onClick={handleNextClick}>
+              <button
+                className={`${styles.btn} ${styles.primary}`}
+                onClick={resetActivity}
+              >
+                Reset Activity
+              </button>
+
+              <button
+                className={`${styles.btn} ${styles.primary}`}
+                onClick={handleNextClick}
+              >
                 Next →
               </button>
             </div>

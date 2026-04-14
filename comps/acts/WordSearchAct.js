@@ -1,14 +1,14 @@
 // comps/acts/WordSearchAct.js
-import React, { useState, useEffect, useCallback } from 'react';
-import styles from './WordSearchAct.module.css';
+import React, { useState, useEffect, useCallback } from "react";
+import styles from "./WordSearchAct.module.css";
 
 const WORD_COLORS = [
-  '#F48FB1',
-  '#90CAF9',
-  '#CE93D8',
-  '#80CBC4',
-  '#FFCC80',
-  '#B39DDB',
+  "#F48FB1",
+  "#90CAF9",
+  "#CE93D8",
+  "#80CBC4",
+  "#FFCC80",
+  "#B39DDB",
 ];
 
 export default function WordSearchAct({ data }) {
@@ -35,19 +35,19 @@ export default function WordSearchAct({ data }) {
     if (Array.isArray(data.table)) {
       parsedGrid = Array.isArray(data.table[0])
         ? data.table
-        : data.table.map((row) => row.split(''));
-    } else if (typeof data.table === 'string') {
+        : data.table.map((row) => row.split(""));
+    } else if (typeof data.table === "string") {
       parsedGrid = data.table
-        .replace(/\r/g, '')
-        .split('\n')
-        .map((r) => r.split(''));
+        .replace(/\r/g, "")
+        .split("\n")
+        .map((r) => r.split(""));
     }
     setGrid(parsedGrid);
 
     // Parse Words
     if (data.words) {
       const parsedWords = data.words.map((w) => ({
-        wordStr: w.word.join(''),
+        wordStr: w.word.join(""),
         marker: w.marker,
       }));
       setWordsData(parsedWords);
@@ -91,11 +91,11 @@ export default function WordSearchAct({ data }) {
 
     const selectedWord = currentSelection
       .map((cell) => grid[cell.r][cell.c])
-      .join('');
-    const reverseWord = selectedWord.split('').reverse().join('');
+      .join("");
+    const reverseWord = selectedWord.split("").reverse().join("");
 
     const targetObj = wordsData.find(
-      (w) => w.wordStr === selectedWord || w.wordStr === reverseWord
+      (w) => w.wordStr === selectedWord || w.wordStr === reverseWord,
     );
 
     if (targetObj && !foundWords.includes(targetObj.wordStr)) {
@@ -131,11 +131,11 @@ export default function WordSearchAct({ data }) {
   // Global Mouse Up
   useEffect(() => {
     const handleGlobalUp = () => checkWordAndEnd();
-    document.addEventListener('mouseup', handleGlobalUp);
-    document.addEventListener('touchend', handleGlobalUp);
+    document.addEventListener("mouseup", handleGlobalUp);
+    document.addEventListener("touchend", handleGlobalUp);
     return () => {
-      document.removeEventListener('mouseup', handleGlobalUp);
-      document.removeEventListener('touchend', handleGlobalUp);
+      document.removeEventListener("mouseup", handleGlobalUp);
+      document.removeEventListener("touchend", handleGlobalUp);
     };
   }, [checkWordAndEnd]);
 
@@ -162,7 +162,7 @@ export default function WordSearchAct({ data }) {
   // --- HINT LOGIC ---
   const handleHint = () => {
     const targetWordObj = wordsData.find(
-      (w) => !foundWords.includes(w.wordStr)
+      (w) => !foundWords.includes(w.wordStr),
     );
     if (!targetWordObj) return;
 
@@ -187,7 +187,7 @@ export default function WordSearchAct({ data }) {
           score: foundWords.length,
           total: wordsData.length,
         }),
-        '*'
+        "*",
       );
     } catch (_) {}
   };
@@ -196,14 +196,27 @@ export default function WordSearchAct({ data }) {
   const cols = grid[0]?.length || 0;
   const isVictory =
     foundWords.length === wordsData.length && wordsData.length > 0;
+  const resetActivity = () => {
+    if (!window.confirm("Are you sure you want to reset this activity?"))
+      return;
 
+    setFoundWords([]);
+    setFoundLines([]);
+
+    setIsSelecting(false);
+    setStartCell(null);
+    setCurrentSelection([]);
+
+    setHintActiveCell(null);
+    setHintActiveWord(null);
+  };
   return (
     <div className={styles.wrapper}>
       <div className={styles.mainCard}>
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.titleText}>
-            {data.title || 'Find the given words'}
+            {data.title || "Find the given words"}
           </div>
         </div>
 
@@ -235,7 +248,7 @@ export default function WordSearchAct({ data }) {
               {grid.map((row, r) =>
                 row.map((letter, c) => {
                   const isSelected = currentSelection.some(
-                    (sel) => sel.r === r && sel.c === c
+                    (sel) => sel.r === r && sel.c === c,
                   );
 
                   // A cell is visually 'found' if it lies on ANY of the found words' markers
@@ -284,7 +297,7 @@ export default function WordSearchAct({ data }) {
                       {letter}
                     </div>
                   );
-                })
+                }),
               )}
             </div>
           </div>
@@ -307,9 +320,9 @@ export default function WordSearchAct({ data }) {
                   style={
                     isHinting
                       ? {
-                          backgroundColor: '#ffd700',
-                          transform: 'scale(1.1)',
-                          fontWeight: 'bold',
+                          backgroundColor: "#ffd700",
+                          transform: "scale(1.1)",
+                          fontWeight: "bold",
                         }
                       : {}
                   }
@@ -327,7 +340,7 @@ export default function WordSearchAct({ data }) {
             Score: {foundWords.length} / {wordsData.length}
           </div>
 
-          <div style={{ display: 'flex' }}>
+          <div style={{ display: "flex" }}>
             {!isVictory && (
               <button
                 className={`${styles.actionBtn} ${styles.hintBtn}`}
@@ -337,12 +350,21 @@ export default function WordSearchAct({ data }) {
               </button>
             )}
             {isVictory && (
-              <button
-                className={`${styles.actionBtn} ${styles.nextBtn}`}
-                onClick={handleNext}
-              >
-                Next ➜
-              </button>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  className={`${styles.btn} ${styles.primary}`}
+                  onClick={resetActivity}
+                >
+                  Reset Activity
+                </button>
+
+                <button
+                  className={`${styles.btn} ${styles.primary}`}
+                  onClick={handleNext}
+                >
+                  Next
+                </button>
+              </div>
             )}
           </div>
         </div>

@@ -1,6 +1,6 @@
-import styled from 'styled-components';
-import { Button, ButtonBar } from 'base/comps';
-import { publicPath } from '../../utils';
+import styled from "styled-components";
+import { Button, ButtonBar } from "base/comps";
+import { publicPath } from "../../utils";
 
 const Styled = styled.div`
   .cards {
@@ -49,7 +49,7 @@ const Styled = styled.div`
 `;
 
 export default function SubCards(props) {
-  console.log('SubCards', props.toc.list);
+  console.log("SubCards", props.toc.list);
   return (
     <Styled>
       <h1>{props.toc.label}</h1>
@@ -58,26 +58,35 @@ export default function SubCards(props) {
           <div className="card" style={item.style || {}}>
             <div className="label">
               {item.labelPrefix && (
-                <span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>
+                <span style={{ fontSize: "0.8rem", fontWeight: "normal" }}>
                   {item.labelPrefix}
                 </span>
               )}
               {item.label}
-              {item.altLabel ? ` ( ${item.altLabel} ) ` : ''}
+              {item.altLabel ? ` ( ${item.altLabel} ) ` : ""}
             </div>
-            <div style={{ display: 'flex' }}>
+            <div style={{ display: "flex" }}>
               <div className="desc">{item.desc}</div>
               {item.icon && (
                 <img
                   className="cardIcon"
-                  src={publicPath('/' + item.icon)}
+                  src={publicPath("/" + item.icon)}
                   style={props.toc.iconStyle || {}}
                 />
               )}
             </div>
-            <Button primary onClick={() => props.onSelect(i)}>
+            {/* <Button primary onClick={() => props.onSelect(i)}>
               Start
-            </Button>
+            </Button> */}
+            <button
+              onClick={() => {
+                console.log("🔥 BUTTON CLICKED:", i);
+                console.log("👉 onSelect function:", props.onSelect);
+                props.onSelect(i);
+              }}
+            >
+              Start
+            </button>
           </div>
         ))}
       </div>

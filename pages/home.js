@@ -14,15 +14,21 @@ export default function HomeView() {
   // Define your exact static style configuration here
   const staticConfig = {
     iconsLoc: "konzeptes/icons",
-    label: "Konzeptes",
+    label: " Konzeptes",
     type: "curriculumIcon",
     style: {
-      fontSize: "0.9rem",
+      fontSize: "2.4rem",
       maxWidth: 1300,
       margin: "0 auto",
     },
     titleStyle: {
-      textDecoration: "none",
+      fontSize: "2.4rem",
+      fontWeight: "800",
+      textAlign: "center",
+      margin: "0 auto 8px",
+      color: "#2b7d10", // 👈 solid color
+      letterSpacing: "1.5px",
+      textShadow: "0 2px 8px rgba(43,125,16,0.3)", // 👈 soft glow
     },
     cardStyle: {
       margin: "25px 0",
