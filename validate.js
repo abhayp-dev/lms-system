@@ -36,3 +36,14 @@ files.forEach(f=>{
   console.log('File', f, 'issues:', missing.length ? missing : 'OK');
   missing.slice(0,10).forEach(m => console.log('  -', m));
 });
+
+
+
+
+
+
+
+
+
+
+

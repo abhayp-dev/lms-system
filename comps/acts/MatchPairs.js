@@ -118,7 +118,10 @@ export default function MatchPairs({ data }) {
 
   return (
     <div className={styles.wrapper}>
-      <h2 className={styles.title}>{data.title || "Match the Pairs"}</h2>
+      {/* <h2 className={styles.title}>{data.title || "Match the Pairs"}</h2> */}
+      <h2 className={styles.title}>
+        {(data.title || "Match the Pairs").replace(/\s*\(/, "\n(")}
+      </h2>
 
       <div
         className={styles.matchContainer}

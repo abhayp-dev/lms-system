@@ -25,15 +25,15 @@ const Styled = styled.div`
   .wrap {
     width: 100%;
     max-width: 1100px;
-    height: 85vh;
-    min-height: 600px;
+    min-height: auto;
+    height: auto;
     background-color: white;
     border-radius: 20px; /* Highly modern rounded corners */
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08); /* Deep, soft shadow */
     position: relative;
     display: flex;
     flex-direction: column;
-    padding: 40px 50px;
+    padding: 30px;
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -94,7 +94,7 @@ const Styled = styled.div`
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 10;
+
     gap: 1.5rem; /* Perfect spacing between text and mascot */
   }
 
@@ -105,6 +105,8 @@ const Styled = styled.div`
     color: #2b7d10;
     line-height: 1.1;
     margin: 0;
+    position: relative;
+    z-index: 10;
     text-align: center;
     letter-spacing: -1px;
     text-shadow: 2px 2px 0px rgba(43, 125, 16, 0.05);
@@ -120,9 +122,10 @@ const Styled = styled.div`
   }
 
   .mascot {
-    height: 40vh;
+    height: 34vh;
     max-height: 380px;
     object-fit: contain;
+
     filter: drop-shadow(0 15px 20px rgba(0, 0, 0, 0.15));
     animation: ${float} 4s ease-in-out infinite;
     z-index: 10;
@@ -135,8 +138,7 @@ const Styled = styled.div`
     align-items: flex-end;
     width: 100%;
     z-index: 20;
-    margin-top: auto;
-    padding-top: 20px;
+    padding-top: 15px;
   }
 
   // .actionBtn {
@@ -180,6 +182,50 @@ const Styled = styled.div`
     background: linear-gradient(135deg, #00c4e8, #0096c7);
   }
 
+  .language-row {
+    display: flex;
+    gap: 120px;
+    backdrop-filter: blur(6px);
+  }
+
+  .dropDown {
+    display: flex;
+    padding: 0 10px 0 0;
+    justify-content: space-between;
+    cursor: pointer;
+    background: linear-gradient(135deg, #2b7d10, #89ca73);
+    border-radius: 12px; /* Slightly tighter rounded corners */
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    width: 300px;
+    outline: none; /* 🔥 removes black outline */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+  .languageDrop {
+    font-size: 1.1rem;
+    font-family: var(--font1, sans-serif);
+    font-weight: bold;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    width: 285px;
+    border: none;
+    outline: none; /* 🔥 removes black outline */
+  }
+
+  .dropDown:hover {
+    box-shadow: 0 10px 22px rgba(0, 182, 9, 0.25);
+    background: linear-gradient(135deg, #3eac19, #9ce783);
+  }
+
+  .languageDrop option {
+    color: #27740e;
+    background: white; /* important */
+    font-size: bold;
+    overflow: hidden;
+    margin-right: 10px;
+  }
   /* --- 4. Background Icons --- */
   .bg-container {
     position: absolute;
@@ -188,7 +234,7 @@ const Styled = styled.div`
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 1;
+    z-index: 5;
   }
 
   .imgIcon {
@@ -197,6 +243,60 @@ const Styled = styled.div`
     transform: scale(
       0.9
     ); /* Scales them down slightly so they don't look cramped */
+  }
+
+  @media (max-width: 768px) {
+    .wrap {
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .top-row {
+      justify-content: center;
+    }
+
+    .logo-img {
+      height: 50px;
+    }
+
+    .center-content {
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+    }
+
+    .tagline {
+      font-size: 0.8rem;
+    }
+
+    .language-row {
+      flex-direction: column; /* 🔥 stack dropdowns */
+      gap: 15px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .languageDrop {
+      width: 100%; /* 🔥 full width */
+      max-width: 280px;
+      font-size: 0.9rem;
+    }
+
+    .mascot {
+      height: 200px; /* 🔥 fixed smaller size */
+    }
+
+    .bottom-row {
+      justify-content: center; /* center button on mobile */
+    }
+
+    .actionBtn {
+      width: 100%;
+      max-width: 250px;
+      text-align: center;
+    }
   }
 `;
 
@@ -300,6 +400,24 @@ export default function Intro(props) {
             <p className="tagline">
               Explore our learning modules and improve your language skills.
             </p>
+          </div>
+          <div className="language-row">
+            <div className="dropDown">
+              <select name="language" required className="languageDrop ">
+                <option value="">Select Grade</option>
+                <option value="free">Class I</option>
+                <option value="paid">Class II</option>
+                <option value="paid">Class III</option>
+              </select>
+            </div>
+            <div className="dropDown">
+              <select name="language" required className="languageDrop ">
+                <option value="">Select Language </option>
+                <option value="free">Hindi</option>
+                {/* <option value="paid">French</option>
+                <option value="paid">German</option> */}
+              </select>
+            </div>
           </div>
 
           <img

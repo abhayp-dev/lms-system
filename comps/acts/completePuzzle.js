@@ -54,7 +54,10 @@ export default function JoinWords({ data }) {
 
   return (
     <div className={styles.wrapper}>
-      <h2 className={styles.title}>{data.data.title}</h2>
+      {/* <h2 className={styles.title}>{data.data.title}</h2> */}
+      <h2 className={styles.title}>
+        {(data.data.title || "Join the Words").replace(/\s*\(/, "\n(")}
+      </h2>
 
       <div className={styles.gameArea}>
         <div className={styles.puzzleContainer}>

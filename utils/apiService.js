@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 // 1. Declare the constant at the top so it's accessible to the whole file
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -6,17 +6,17 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const api = axios.create({
   baseURL: API_BASE,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 export const apiService = {
   // --- AUTH ---
-  login: (data) => api.post('/v2/user/login', data),
-  register: (data) => api.post('/v2/user/register', data),
+  login: (data) => api.post("/v2/user/login", data),
+  register: (data) => api.post("/v2/user/register", data),
 
   // --- EXIT / LOGOUT ---
-  logout: (data) => api.post('/exit_api/logout', data),
+  logout: (data) => api.post("/exit_api/logout", data),
 
   // --- MCQ ---
   getMcqProgress: (userId, actId) =>
@@ -24,18 +24,19 @@ export const apiService = {
       params: { t: new Date().getTime() },
     }),
 
-  saveMcqProgress: (payload) => api.post('/mcq/progress', payload),
-  completeMcq: (payload) => api.post('/mcq/complete', payload),
+  saveMcqProgress: (payload) => api.post("/mcq/progress", payload),
+  completeMcq: (payload) => api.post("/mcq/complete", payload),
 
   // --- SPELLING (CompleteWord) ---
   getSpellingProgress: (uid, aid) =>
     api.get(`/completedword/progress/${uid}/${aid}`),
 
-  saveSpellingProgress: (data) => api.post('/completedword/progress', data),
-  completeSpelling: (data) => api.post('/completedword/complete', data),
+  saveSpellingProgress: (data) => api.post("/completedword/progress", data),
+  completeSpelling: (data) => api.post("/completedword/complete", data),
 
   // --- PLAYLIST / ACTIVITY DATA ---
-  getActivityData: (id) => api.get('/activity/data', { params: { id } }),
+  getActivityData: (id) => api.get("/activity/data", { params: { id } }),
+  getActivityDetail: (id) => api.get(`/activity/detail/${id}`),
 
   // --- IMAGE HELPERS ---
   // This helper generates the dynamic URL for your Oracle images
@@ -45,7 +46,7 @@ export const apiService = {
   getBgImageUrl: (id) => `${API_BASE}/v1/konzeptes/image/bg/${id}`,
 
   // --- HOME / DASHBOARD CONFIG ---
-  getHomeConfig: () => api.get('/v1/konzeptes/config'),
+  getHomeConfig: () => api.get("/v1/konzeptes/config"),
 
   // --- SEQUENCE ---
   getSequenceProgress: (uid, aid) =>
@@ -53,9 +54,9 @@ export const apiService = {
       params: { t: new Date().getTime() },
     }),
 
-  saveSequenceProgress: (payload) => api.post('/sequence/progress', payload),
+  saveSequenceProgress: (payload) => api.post("/sequence/progress", payload),
 
-  completeSequence: (payload) => api.post('/sequence/complete', payload),
+  completeSequence: (payload) => api.post("/sequence/complete", payload),
 
   // --- MATCH BY ---
   getMatchByProgress: (uid, aid) =>
@@ -63,7 +64,7 @@ export const apiService = {
       params: { t: new Date().getTime() },
     }),
 
-  saveMatchByProgress: (payload) => api.post('/matchby/progress', payload),
+  saveMatchByProgress: (payload) => api.post("/matchby/progress", payload),
 
-  completeMatchBy: (payload) => api.post('/matchby/complete', payload),
+  completeMatchBy: (payload) => api.post("/matchby/complete", payload),
 };

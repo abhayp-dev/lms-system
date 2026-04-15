@@ -1,6 +1,6 @@
 // comps/acts/McqAudioAct.js
-import React, { useState, useEffect, useRef } from 'react';
-import styles from './McqAudioAct.module.css';
+import React, { useState, useEffect, useRef } from "react";
+import styles from "./McqAudioAct.module.css";
 
 // Helpers
 function shuffleArray(arr) {
@@ -13,7 +13,7 @@ function shuffleArray(arr) {
 }
 
 function parseOptionsString(raw) {
-  return (raw || '')
+  return (raw || "")
     .split(/\n|,/)
     .map((s) => s.trim())
     .filter(Boolean);
@@ -21,14 +21,14 @@ function parseOptionsString(raw) {
 
 function normalizeQuestions(raw) {
   return raw.map((q) => {
-    const original = q.qText || q.text || '';
-    const rawOpts = parseOptionsString(q.options || q.option || '');
+    const original = q.qText || q.text || "";
+    const rawOpts = parseOptionsString(q.options || q.option || "");
     let originalCorrectIndex = -1;
 
     const cleaned = rawOpts.map((o, idx) => {
-      if (o.indexOf('*') !== -1) {
+      if (o.indexOf("*") !== -1) {
         originalCorrectIndex = idx;
-        return o.replace(/\*/g, '').trim();
+        return o.replace(/\*/g, "").trim();
       }
       return o;
     });
@@ -57,10 +57,10 @@ function normalizeQuestions(raw) {
 }
 
 function formatTime(seconds) {
-  if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
+  if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
-  return `${m}:${s < 10 ? '0' : ''}${s}`;
+  return `${m}:${s < 10 ? "0" : ""}${s}`;
 }
 
 export default function McqAudioAct({ data }) {
@@ -69,10 +69,10 @@ export default function McqAudioAct({ data }) {
   const [current, setCurrent] = useState(0);
   const [score, setScore] = useState(0);
   const [attempted, setAttempted] = useState(0);
-  const [status, setStatus] = useState('PLAYING');
+  const [status, setStatus] = useState("PLAYING");
 
   // Media State
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState("");
   const [imageSrc, setImageSrc] = useState(null);
   const [audioSrc, setAudioSrc] = useState(null);
 
@@ -88,7 +88,7 @@ export default function McqAudioAct({ data }) {
     if (!data) return;
 
     // Extract Title & Media
-    const actTitle = data.title || data.label || 'Multiple Choice';
+    const actTitle = data.title || data.label || "Multiple Choice";
     setTitle(actTitle);
     setImageSrc(data.image || data.bgData?.bgImg || null);
     setAudioSrc(data.audio || null);
@@ -154,7 +154,7 @@ export default function McqAudioAct({ data }) {
     if (current + 1 < questions.length) {
       setCurrent(current + 1);
     } else {
-      setStatus('SUMMARY');
+      setStatus("SUMMARY");
       // Stop audio if moving to summary
       if (audioRef.current) {
         audioRef.current.pause();
@@ -167,7 +167,7 @@ export default function McqAudioAct({ data }) {
     try {
       window.parent.postMessage(
         JSON.stringify({ done: true, score: score, total: attempted }),
-        '*'
+        "*",
       );
     } catch (_) {}
   };
@@ -176,12 +176,12 @@ export default function McqAudioAct({ data }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       const q = questions[current];
-      if (e.key === 'Enter' && q && q.answered && status === 'PLAYING') {
+      if (e.key === "Enter" && q && q.answered && status === "PLAYING") {
         handleNext();
       }
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   });
 
   if (questions.length === 0) return null;
@@ -189,12 +189,35 @@ export default function McqAudioAct({ data }) {
   const q = questions[current];
   const total = questions.length;
 
+  const resetActivity = () => {
+    if (!window.confirm("Are you sure you want to reset this activity?"))
+      return;
+
+    const rawQuestions = data.questions || (Array.isArray(data) ? data : []);
+
+    setQuestions(normalizeQuestions(rawQuestions));
+    setCurrent(0);
+    setScore(0);
+    setAttempted(0);
+    setStatus("PLAYING");
+
+    // Reset audio player
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
+    setIsPlaying(false);
+    setAudioProgress(0);
+    setCurrentTime(0);
+  };
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.mainCard}>
         <div className={styles.mainCardInner}>
           {/* Top Title & Media Area */}
-          {(title || imageSrc || audioSrc) && status === 'PLAYING' && (
+          {(title || imageSrc || audioSrc) && status === "PLAYING" && (
             <div className={styles.mediaWrap}>
               {title && <div className={styles.title}>{title}</div>}
 
@@ -214,7 +237,7 @@ export default function McqAudioAct({ data }) {
                     onEnded={handleAudioEnded}
                   />
                   <button className={styles.playPauseBtn} onClick={togglePlay}>
-                    {isPlaying ? '❚❚' : '▶'}
+                    {isPlaying ? "❚❚" : "▶"}
                   </button>
                   <div className={styles.seekBarContainer}>
                     <div
@@ -238,7 +261,7 @@ export default function McqAudioAct({ data }) {
           )}
 
           {/* Game UI */}
-          {status === 'PLAYING' ? (
+          {status === "PLAYING" ? (
             <>
               {/* Question Text */}
               <div className={styles.qTitle}>
@@ -282,7 +305,7 @@ export default function McqAudioAct({ data }) {
                 <div
                   className={`${styles.mark} ${q.userChoice === q.correctIndex ? styles.right : styles.wrong}`}
                 >
-                  {q.userChoice === q.correctIndex ? '✔' : '✖'}
+                  {q.userChoice === q.correctIndex ? "✔" : "✖"}
                 </div>
               )}
 
@@ -296,7 +319,7 @@ export default function McqAudioAct({ data }) {
                   disabled={!q.answered}
                   onClick={handleNext}
                 >
-                  {current + 1 === total ? 'Finish' : 'Next'}
+                  {current + 1 === total ? "Finish" : "Next"}
                 </button>
               </div>
             </>
@@ -305,10 +328,10 @@ export default function McqAudioAct({ data }) {
             <>
               <div
                 style={{
-                  textAlign: 'center',
-                  fontSize: '20px',
+                  textAlign: "center",
+                  fontSize: "20px",
                   fontWeight: 600,
-                  marginBottom: '16px',
+                  marginBottom: "16px",
                 }}
               >
                 Activity Completed!
@@ -318,23 +341,23 @@ export default function McqAudioAct({ data }) {
                 {questions.map((sq, i) => {
                   const user =
                     sq.userChoice === null
-                      ? '(Skipped)'
+                      ? "(Skipped)"
                       : sq.options[sq.userChoice];
                   const correct = sq.options[sq.correctIndex];
                   const isCorrect = sq.userChoice === sq.correctIndex;
 
                   return (
                     <div key={i} className={styles.summaryItem}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>
-                        {i + 1}.{' '}
+                      <div style={{ fontWeight: "bold", marginBottom: "6px" }}>
+                        {i + 1}.{" "}
                         <span
                           dangerouslySetInnerHTML={{
                             __html: sq.qTextRaw || sq.qText,
                           }}
                         />
                       </div>
-                      <div style={{ fontSize: '0.95em' }}>
-                        Your Answer:{' '}
+                      <div style={{ fontSize: "0.95em" }}>
+                        Your Answer:{" "}
                         <span
                           className={
                             isCorrect
@@ -345,7 +368,7 @@ export default function McqAudioAct({ data }) {
                           {user}
                         </span>
                         {!isCorrect && (
-                          <span style={{ color: '#555', marginLeft: '8px' }}>
+                          <span style={{ color: "#555", marginLeft: "8px" }}>
                             (Correct: <strong>{correct}</strong>)
                           </span>
                         )}
@@ -359,9 +382,16 @@ export default function McqAudioAct({ data }) {
                 <div className={styles.score}>
                   Final Score: {score} / {attempted}
                 </div>
-                <button className={styles.nextBtn} onClick={handleFinalNext}>
-                  Next
-                </button>
+
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button className={styles.nextBtn} onClick={resetActivity}>
+                    Reset Activity
+                  </button>
+
+                  <button className={styles.nextBtn} onClick={handleFinalNext}>
+                    Next
+                  </button>
+                </div>
               </div>
             </>
           )}

@@ -22,18 +22,19 @@
   --highlight-border: #ff4081;
   --text-color: #333;
   --btn-blue: #00334e;
-
+  --accent: #0b4f71;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  width: 98%;
+  width: 85%;
+  max-width: 100%; /*Pankaj Sharma */
   height: 96%;
   border-radius: 15px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); /*Pankaj Sharma */
   display: flex;
   flex-direction: column;
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.6);
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.1); /*Pankaj Sharma */
   box-sizing: border-box;
 }
 
@@ -106,17 +107,29 @@
 }
 
 /* STATES */
-.selected {
+/* .selected {
   border: 2px solid var(--highlight-border);
   background-color: rgba(255, 255, 255, 0.5);
   z-index: 10;
+} */
+
+.selected {
+  border: 2px solid var(--highlight-border);
+  background-color: rgba(255, 255, 255, 0.5);
+  z-index: 20; /* Ensure this is higher than .cell and .highlightLine */
 }
 
-.found {
+/* .found {
   color: white !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   border: none;
-}
+} */
+ 
+ .found {
+  color: #333 !important; /* Keep text dark so it's visible */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05); /* Keep the border to maintain alignment */
+ }
 
 /* Hint Animation */
 .hintActive {
@@ -177,7 +190,29 @@
   border-radius: 0 0 15px 15px;
   flex-shrink: 0;
 }
-
+.btn {
+  padding: 0 24px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  font-size: 15px;
+  height: 40px;
+  min-width: 100px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.primary {
+  background: var(--accent);
+  color: white;
+  transition: opacity 0.2s;
+}
+.primary:hover {
+  opacity: 0.9;
+}
 .scoreBadge {
   background: white;
   padding: 6px 12px;

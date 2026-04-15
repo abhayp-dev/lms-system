@@ -1,14 +1,25 @@
+// /** @type {import('next').NextConfig} */
+// const nextConfig = {
+//   compiler: {
+//     styledComponents: true,
+//   },
+//   images: {
+//     unoptimized: true,
+//   },
+// };
+
+// export default nextConfig;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  output: "export", // 👈 this enables static export to /out folder
 
-  // ⭐⭐⭐ REQUIRED FOR HYDRATION FIX
   compiler: {
     styledComponents: true,
   },
 
   images: {
-    unoptimized: true,
+    unoptimized: true, // required for static export
   },
 };
 

@@ -107,7 +107,7 @@
 .registration-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: 8px; /* Tighter gap between fields */
+  gap: 16px; /* Tighter gap between fields */
   width: 100%;
 }
 
