@@ -1,216 +1,309 @@
-/* comps/acts/CompleteWordAct.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap');
 
+/* ── Page wrapper ── */
 .wrapper {
   width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  min-height: calc(100vh - 65px);
+  background: #f2f5ef;
+  padding-bottom: 40px;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
 }
 
+/* ── Content container ── */
 .mainCard {
-  --btn-blue: #a8d0e6;
-  --btn-blue-hover: #91c2dc;
-  --purple-box: #d099e6;
-  --text-color: #333;
-  --green-correct: #2e7d32;
-  --red-wrong: #d32f2f;
-  --next-btn-color: #00334e;
+  --green-correct: #2e7d45;
+  --red-wrong: #c0394f;
+  --purple-box: #0d8a78;
 
-  /* The "Frosted Glass" Blur Effect */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-
-  /* Subtle white border */
-  border: 1px solid rgba(255, 255, 255, 0.6);
-
-  /* FULL WIDTH SETTINGS from original CSS */
-  width: 85%;
-  max-width: 100%;
-  height: 96%;
-
-  border-radius: 15px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
-  padding: 30px;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  align-items: center;
-  color: var(--text-color);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
+.main { display: contents; }
+
+/* ── Title / instruction card ── */
 .titleText {
-  font-size: 1.1rem;
-  font-style: italic;
-  color: #555;
-  margin-bottom: 20px;
-  width: 100%;
-  max-width: 1000px;
-  text-align: center;
+  background: #fff;
+  border: 1px solid #dde6d8;
+  border-radius: 16px;
+  padding: 20px 26px;
+  box-shadow: 0 2px 8px rgba(30,70,25,0.08);
+  font-family: 'Nunito', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: #1a2518;
+  white-space: pre-line;
+  text-align: left;
+  margin-bottom: 0;
+  animation: fadeUp 0.35s ease both;
 }
 
-/* --- Game Area --- */
+/* ── Game area ── */
 .gameArea {
-  width: 100%;
-  max-width: 1000px;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+  gap: 18px;
+  margin-bottom: 0;
 }
 
+/* ── Word display card ── */
 .wordDisplayContainer {
-  background-color: rgba(240, 240, 232, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  padding: 40px;
-  min-height: 150px;
+  background: #fff;
+  border: 1px solid #dde6d8;
+  border-radius: 16px;
+  padding: 32px 26px;
+  box-shadow: 0 4px 20px rgba(30,70,25,0.12);
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 40px;
+  min-height: 120px;
+  animation: fadeUp 0.35s 0.05s ease both;
 }
 
 .wordPuzzle {
-  font-size: 2.5rem;
+  font-size: 2rem;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #555;
+  color: #1a2518;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
 }
 
-/* The Purple Box */
 .missingBox {
   background-color: var(--purple-box);
-  color: white;
-  min-width: 50px;
-  height: 60px;
+  color: #fff;
+  min-width: 52px;
+  height: 56px;
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  border-radius: 6px;
-  margin: 0 5px;
-  font-weight: bold;
-  padding-bottom: 4px;
+  border-radius: 10px;
+  margin: 0 6px;
+  font-weight: 900;
+  font-size: 1.8rem;
+  padding: 0 14px;
+  box-shadow: 0 3px 10px rgba(13,138,120,0.3);
+  transition: all 0.2s;
 }
 
-/* Options */
+/* ── Options card ── */
 .optionsContainer {
+  background: #fff;
+  border: 1px solid #dde6d8;
+  border-radius: 16px;
+  padding: 22px 26px;
+  box-shadow: 0 2px 8px rgba(30,70,25,0.08);
   display: flex;
   justify-content: center;
-  gap: 15px;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  animation: fadeUp 0.35s 0.1s ease both;
 }
 
 .optionBtn {
-  background-color: var(--btn-blue);
-  color: var(--text-color);
-  border: none;
-  padding: 10px 20px;
-  font-size: 1.8rem;
-  border-radius: 6px;
+  background: #fff;
+  color: #1a2518;
+  border: 2px solid #dde6d8;
+  padding: 14px 24px;
+  font-size: 1.4rem;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  border-radius: 10px;
   cursor: pointer;
-  min-width: 60px;
-  transition: transform 0.1s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 64px;
+  transition: all 0.18s;
+  box-shadow: 0 2px 6px rgba(30,70,25,0.06);
 }
 
-.optionBtn:active {
-  transform: scale(0.95);
+.optionBtn:hover:not(:disabled) {
+  border-color: #0d8a78;
+  background: #ccf0ea;
+  color: #0d8a78;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13,138,120,0.2);
 }
+
 .optionBtn:disabled {
-  opacity: 0.7;
+  opacity: 0.65;
   cursor: default;
 }
 
-/* --- Footer Area --- */
+.selected {
+  border-color: #0d8a78 !important;
+  background: #ccf0ea !important;
+  color: #0d8a78 !important;
+}
+
+.correct {
+  background: #d4edda !important;
+  border-color: #2e7d45 !important;
+  color: #2e7d45 !important;
+  animation: popIn 0.3s ease;
+}
+
+.wrong {
+  background: #fde4ea !important;
+  border-color: #c0394f !important;
+  color: #c0394f !important;
+  animation: popIn 0.3s ease;
+}
+
+/* ── Footer / action bar ── */
 .gameFooter,
 .summaryFooter {
-  margin-top: auto;
+  background: #fff;
+  border: 1px solid #dde6d8;
+  border-radius: 16px;
+  padding: 16px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  max-width: 1000px;
+  box-shadow: 0 2px 8px rgba(30,70,25,0.08);
+  position: static;
+  margin-top: 0;
+  animation: fadeUp 0.35s 0.15s ease both;
 }
 
+/* ── Score badge ── */
 .scoreBadge {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 5px 15px;
-  font-size: 1rem;
-  color: #555;
-  border-radius: 4px;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
-  font-weight: bold;
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #2e7d45;
 }
 
-.nextBtn {
-  background-color: var(--next-btn-color);
-  color: white;
-  padding: 10px 25px;
-  font-size: 1.1rem;
-  border: none;
-  border-radius: 5px;
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
   cursor: pointer;
-  z-index: 10;
+  transition: all 0.18s;
+  border: none;
+  height: auto;
+  min-width: auto;
+  line-height: 1;
+  box-shadow: none;
 }
 
-.floatNext {
-  position: absolute;
-  bottom: 30px;
-  right: 30px;
+.primary {
+  background: #2e7d45;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(46,125,69,0.3);
 }
 
-/* --- Summary Styles --- */
+.primary:hover:not(:disabled) {
+  background: #3fa358;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(46,125,69,0.35);
+}
+
+.primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.floatNext { position: static; }
+
+/* ── Summary area ── */
 .summaryArea {
-  width: 100%;
-  max-width: 1000px;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+  gap: 18px;
+}
+
+.summaryArea h2 {
+  background: #fff;
+  border: 1px solid #dde6d8;
+  border-radius: 16px;
+  padding: 20px 26px;
+  box-shadow: 0 2px 8px rgba(30,70,25,0.08);
+  font-family: 'Nunito', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: #1a2518;
+  margin: 0;
 }
 
 .summaryList {
-  margin-top: 20px;
-  max-height: 350px;
+  background: #fff;
+  border: 1px solid #dde6d8;
+  border-radius: 16px;
+  padding: 20px 26px;
+  box-shadow: 0 2px 8px rgba(30,70,25,0.08);
+  max-height: 380px;
   overflow-y: auto;
-  font-size: 1.2rem;
-  padding-right: 10px;
-  flex-grow: 1;
+  font-size: 15px;
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #c4d4bd transparent;
 }
+
+.summaryList::-webkit-scrollbar { width: 4px; }
+.summaryList::-webkit-scrollbar-thumb { background: #c4d4bd; border-radius: 4px; }
 
 .summaryItem {
-  margin-bottom: 15px;
-  padding-left: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f4ee;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.sNum {
-  color: var(--red-wrong);
-  font-weight: bold;
-  margin-right: 5px;
-}
-.sCorrectNum {
-  color: var(--green-correct);
-  font-weight: bold;
-  margin-right: 5px;
+.summaryItem:last-child { border-bottom: none; }
+
+.sNum { color: #c0394f; font-weight: 700; }
+.sCorrectNum { color: #2e7d45; font-weight: 700; }
+.sWrongText { color: #c0394f; font-weight: 600; }
+.sCorrectText { color: #2e7d45; font-weight: 600; }
+.sBracket { color: #2e7d45; font-weight: 500; margin-left: 4px; }
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.sWrongText {
-  color: var(--red-wrong);
-}
-.sCorrectText {
-  color: var(--green-correct);
+@keyframes popIn {
+  0%   { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1);   opacity: 1; }
 }
 
-.sBracket {
-  color: var(--green-correct);
-  margin-left: 10px;
-  font-weight: 500;
+/* ── Tablet ── */
+@media (max-width: 800px) {
+  .mainCard { padding: 20px 20px 32px; }
+  .wordPuzzle { font-size: 1.7rem; }
+  .optionBtn { font-size: 1.25rem; padding: 12px 20px; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .mainCard { padding: 14px 14px 28px; }
+  .titleText { font-size: 17px; padding: 16px 18px; }
+  .wordDisplayContainer { padding: 24px 18px; min-height: 90px; }
+  .wordPuzzle { font-size: 1.4rem; }
+  .missingBox { height: 46px; font-size: 1.5rem; min-width: 44px; }
+  .optionsContainer { padding: 16px 18px; gap: 8px; }
+  .optionBtn { font-size: 1.1rem; padding: 10px 16px; }
+  .gameFooter, .summaryFooter { padding: 14px 16px; }
+  .scoreBadge { font-size: 13px; }
+  .btn { padding: 10px 16px; font-size: 13px; }
 }

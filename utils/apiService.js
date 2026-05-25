@@ -1,22 +1,28 @@
-import axios from 'axios';
-
+import axios from "axios";
 // 1. Declare the constant at the top so it's accessible to the whole file
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 export const apiService = {
   // --- AUTH ---
-  login: (data) => api.post('/v2/user/login', data),
-  register: (data) => api.post('/v2/user/register', data),
+  login: (data) => api.post("/v2/user/login", data),
+  register: (data) => api.post("/v2/user/register", data),
+
+  // --- PROFILE ---
+  // getProfile: (data) => api.post("/v2/user/get-profile", data),
+  // updateProfile: (data) => api.post("/v2/user/update-profile", data),
+
+  getProfile: (data) => api.post("/v2/user/get-profile", data),
+  updateProfile: (data) => api.post("/v2/user/update-profile", data),
 
   // --- EXIT / LOGOUT ---
-  logout: (data) => api.post('/exit_api/logout', data),
+  logout: (data) => api.post("/exit_api/logout", data),
 
   // --- MCQ ---
   getMcqProgress: (userId, actId) =>
@@ -24,18 +30,23 @@ export const apiService = {
       params: { t: new Date().getTime() },
     }),
 
-  saveMcqProgress: (payload) => api.post('/mcq/progress', payload),
-  completeMcq: (payload) => api.post('/mcq/complete', payload),
+  saveMcqProgress: (payload) => api.post("/mcq/progress", payload),
+  completeMcq: (payload) => api.post("/mcq/complete", payload),
 
   // --- SPELLING (CompleteWord) ---
   getSpellingProgress: (uid, aid) =>
     api.get(`/completedword/progress/${uid}/${aid}`),
 
-  saveSpellingProgress: (data) => api.post('/completedword/progress', data),
-  completeSpelling: (data) => api.post('/completedword/complete', data),
+  saveSpellingProgress: (data) => api.post("/completedword/progress", data),
+  completeSpelling: (data) => api.post("/completedword/complete", data),
 
   // --- PLAYLIST / ACTIVITY DATA ---
-  getActivityData: (id) => api.get('/activity/data', { params: { id } }),
+  // getActivityData: (id) => api.get("/activity/data", { params: { id } }),
+  getActivityData: (params) => api.get("/activity/data", { params }),
+  getActivityDetail: (id, profile) =>
+    api.get(`/activity/detail/${id}`, { params: profile }),
+  // getActivityDetail: (id, profile) =>api.get(`/activity/detail`, {params: { id, ...profile },}),
+  // getActivityDetail: (id) => api.get(`/activity/detail/${id}`),
 
   // --- IMAGE HELPERS ---
   // This helper generates the dynamic URL for your Oracle images
@@ -45,7 +56,15 @@ export const apiService = {
   getBgImageUrl: (id) => `${API_BASE}/v1/konzeptes/image/bg/${id}`,
 
   // --- HOME / DASHBOARD CONFIG ---
-  getHomeConfig: () => api.get('/v1/konzeptes/config'),
+  // getHomeConfig: () => api.get("/v1/konzeptes/config"),
+  getHomeConfig: (profile) =>
+    api.get("/v1/konzeptes/config", { params: profile }),
+
+
+getCardProgress: (profile) =>
+  api.get("/progress/card-progress", {
+    params: profile,
+  }),
 
   // --- SEQUENCE ---
   getSequenceProgress: (uid, aid) =>
@@ -53,9 +72,9 @@ export const apiService = {
       params: { t: new Date().getTime() },
     }),
 
-  saveSequenceProgress: (payload) => api.post('/sequence/progress', payload),
+  saveSequenceProgress: (payload) => api.post("/sequence/progress", payload),
 
-  completeSequence: (payload) => api.post('/sequence/complete', payload),
+  completeSequence: (payload) => api.post("/sequence/complete", payload),
 
   // --- MATCH BY ---
   getMatchByProgress: (uid, aid) =>
@@ -63,7 +82,239 @@ export const apiService = {
       params: { t: new Date().getTime() },
     }),
 
-  saveMatchByProgress: (payload) => api.post('/matchby/progress', payload),
+  saveMatchByProgress: (payload) => api.post("/matchby/progress", payload),
 
-  completeMatchBy: (payload) => api.post('/matchby/complete', payload),
+  completeMatchBy: (payload) => api.post("/matchby/complete", payload),
+
+  sendWelcomeEmail: (data) => api.post("/api/send-email", data),
+
+
+
+  // -- WORD SEARCH ---
+
+// Add to your existing apiService object
+getWordSearchProgress: (userId, actId) => 
+  api.get(`/wordsearch/progress/${userId}/${actId}`, { 
+    params: { t: new Date().getTime() } 
+  }),
+
+saveWordSearchProgress: (payload) => 
+  api.post("/wordsearch/progress", payload),
+
+completeWordSearch: (payload) => 
+  api.post("/wordsearch/complete", payload),
+
+// --- INFORMATION PROCESSING ---
+
+getInfoProcessingProgress: (
+userId,
+actId
+)=>
+
+api.get(
+
+`/ip/progress/${userId}/${actId}`,
+
+{
+params:{
+t:
+new Date()
+.getTime()
+}
+
+}
+),
+
+saveInfoProcessingProgress:
+(
+payload
+)=>
+
+api.post(
+
+"/ip/progress",
+
+payload
+
+),
+
+completeInfoProcessing:
+(
+payload
+)=>
+
+api.post(
+
+"/ip/complete",
+
+payload
+
+),
+
+  // --- CLASSIFY SENTENCE ---
+
+getClassifyProgress: (userId, actId) =>
+  api.get(
+    `/classify/progress/${userId}/${actId}`,
+    {
+      params: {
+        t: new Date().getTime(),
+      },
+    }
+  ),
+
+saveClassifyProgress: (payload) =>
+  api.post(
+    "/classify/progress",
+    payload
+  ),
+
+completeClassify: (payload) =>
+  api.post(
+    "/classify/complete",
+    payload
+  ),
+
+  // --- COMPLETE PUZZLE ---
+
+getPuzzleProgress:
+(userId,actId)=>
+
+api.get(
+
+`/puzzle/progress/${userId}/${actId}`,
+
+{
+params:{
+t:
+new Date()
+.getTime()
+}
+
+}
+
+),
+
+savePuzzleProgress:
+(payload)=>
+
+api.post(
+
+"/puzzle/progress",
+
+payload
+
+),
+
+completePuzzle:
+(payload)=>
+
+api.post(
+
+"/puzzle/complete",
+
+payload
+
+),
+// --- DRAG DROP ---
+
+getDragDropProgress:
+(
+userId,
+actId
+)=>
+
+api.get(
+
+`/dragdrop/progress/${userId}/${actId}`,
+
+{
+params:{
+t:
+new Date()
+.getTime()
+}
+
+}
+
+),
+
+saveDragDropProgress:
+(
+payload
+)=>
+
+api.post(
+
+"/dragdrop/progress",
+
+payload
+
+),
+
+completeDragDrop:
+(
+payload
+)=>
+
+api.post(
+
+"/dragdrop/complete",
+
+payload
+
+),
+
+// --- FILLUP ---
+
+getFillupProgress:
+(
+userId,
+actId
+)=>
+
+api.get(
+
+`/fillup/progress/${userId}/${actId}`,
+
+{
+params:{
+t:
+new Date()
+.getTime()
+}
+
+}
+
+),
+
+saveFillupProgress:
+(
+payload
+)=>
+
+api.post(
+
+"/fillup/progress",
+
+payload
+
+),
+
+completeFillup:
+(
+payload
+)=>
+
+api.post(
+
+"/fillup/complete",
+
+payload
+
+),
 };
+
+
+
+

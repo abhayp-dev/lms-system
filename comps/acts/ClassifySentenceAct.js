@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import styles from './ClassifySentenceAct.module.css';
+import React, { useState, useEffect } from "react";
+import styles from "./ClassifySentenceAct.module.css";
+import Confetti from "react-confetti";
+import { apiService } from "../../utils/apiService";
 
 function shuffleArray(arr) {
   const a = [...arr];
@@ -18,28 +20,28 @@ function parseClassify(text) {
     .filter(Boolean);
 
   return lines.map((line) => {
-    const parts = line.split('|').map((p) => p.trim());
-    let qText = '',
-      optsRaw = '';
+    const parts = line.split("|").map((p) => p.trim());
+    let qText = "",
+      optsRaw = "";
 
     if (parts.length === 3) {
       qText = parts[1];
       optsRaw = parts[2];
     } else {
       qText = parts[0];
-      optsRaw = parts[1] || '';
+      optsRaw = parts[1] || "";
     }
 
     const rawOpts = optsRaw
-      .split(',')
+      .split(",")
       .map((o) => o.trim())
       .filter(Boolean);
     let correctIdx = -1;
 
     const cleanOpts = rawOpts.map((o, i) => {
-      if (o.startsWith('*')) {
+      if (o.startsWith("*")) {
         correctIdx = i;
-        return o.replace(/^\*+/, '').trim();
+        return o.replace(/^\*+/, "").trim();
       }
       return o;
     });
@@ -60,6 +62,8 @@ function parseClassify(text) {
       options: shuffled,
       correctIndex: newCorrect,
       userChoice: null,
+      selectedOption: null, // ✅ NEW
+      answered: false,
     };
   });
 }
@@ -69,62 +73,293 @@ export default function ClassifySentenceAct({ data }) {
   const [current, setCurrent] = useState(0);
   const [score, setScore] = useState(0);
   const [attempted, setAttempted] = useState(0);
-  const [status, setStatus] = useState('PLAYING');
+  const [status, setStatus] = useState("PLAYING");
+  const [showConfetti, setShowConfetti] = useState(false);
+  const activityId = data?.id || "classify_sentence_act";
 
-  const title = data?.title || 'Pick the right option';
+  const userId =
+Number(
+localStorage.getItem(
+"user_id"
+));
 
-  useEffect(() => {
-    if (!data) return;
-    const rawText = data.text || '';
-    let parsedQs = parseClassify(rawText);
-    parsedQs = shuffleArray(parsedQs);
-    setQuestions(parsedQs);
-  }, [data]);
+  const title = (data?.title || "Some Title").replace(/\s*\(/, "\n(");
+
+  useEffect(()=>{
+
+if(!data)
+return;
+
+const load=
+async()=>{
+
+try{
+
+const res=
+await apiService
+.getClassifyProgress(
+
+userId,
+
+activityId
+
+);
+
+if(
+res?.data?.
+progress_json
+){
+
+const parsed=
+JSON.parse(
+res.data
+.progress_json
+);
+
+setQuestions(
+parsed.questions
+||[]
+);
+
+setCurrent(
+parsed.current
+||0
+);
+
+setScore(
+parsed.score
+||0
+);
+
+setAttempted(
+parsed.attempted
+||0
+);
+
+setStatus(
+parsed.status
+||"PLAYING"
+);
+
+return;
+
+}
+
+}catch{}
+
+const rawText=
+data.text
+||"";
+
+let parsedQs=
+parseClassify(
+rawText
+);
+
+parsedQs=
+shuffleArray(
+parsedQs
+);
+
+setQuestions(
+parsedQs
+);
+
+};
+
+load();
+
+},[
+data
+]);
+ const saveProgress =
+async(extra={})=>{
+
+const payload={
+
+questions,
+
+current,
+
+score,
+
+attempted,
+
+status,
+
+...extra
+
+};
+
+try{
+
+await apiService
+.saveClassifyProgress({
+
+user_id:
+userId,
+
+activity_id:
+activityId,
+
+progress_json:
+JSON.stringify(
+payload
+),
+
+score:
+payload.score,
+
+attempted:
+payload.attempted,
+
+status:
+"IN_PROGRESS"
+
+});
+
+}catch(err){
+
+console.log(
+err
+);
+
+}
+
+};
 
   const handleOptionClick = (idx) => {
-    const q = questions[current];
-    if (q.userChoice !== null) return;
+    const updated = [...questions];
+    const q = updated[current];
 
-    const isCorrect = idx === q.correctIndex;
-    const updatedQuestions = [...questions];
-    updatedQuestions[current] = { ...q, userChoice: idx };
+    if (q.answered) return;
 
-    setQuestions(updatedQuestions);
-    setAttempted(attempted + 1);
-    if (isCorrect) setScore(score + 1);
+    q.selectedOption = idx;
+
+    setQuestions(updated);
+
+    // ✅ SAVE selection also
+    saveProgress({ questions: updated });
+  };
+
+  const handleSubmit = () => {
+    const updated = [...questions];
+    const q = updated[current];
+
+    if (q.selectedOption === null) return;
+
+    q.answered = true;
+    q.userChoice = q.selectedOption;
+
+    const isCorrect = q.userChoice === q.correctIndex;
+
+    const newScore = isCorrect ? score + 1 : score;
+    const newAttempted = attempted + 1;
+
+    setQuestions(updated);
+    setScore(newScore);
+    setAttempted(newAttempted);
+
+    if (isCorrect) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 2000);
+    }
+
+    // ✅ SAVE
+    saveProgress({
+      questions: updated,
+      score: newScore,
+      attempted: newAttempted,
+    });
   };
 
   const handleNext = () => {
     if (current + 1 < questions.length) {
-      setCurrent(current + 1);
+      const nextIdx = current + 1;
+      setCurrent(nextIdx);
+
+      saveProgress({ current: nextIdx });
     } else {
-      setStatus('SUMMARY');
+      saveProgress({
+
+questions,
+
+current,
+
+score,
+
+attempted,
+
+status:
+"SUMMARY"
+
+});
+
+setStatus(
+"SUMMARY"
+);
     }
   };
+ const handleDone =
+async()=>{
 
-  const handleDone = () => {
-    try {
-      window.parent.postMessage(
-        JSON.stringify({ done: true, score: score, total: attempted }),
-        '*'
-      );
-    } catch (_) {}
-  };
+try{
 
+await apiService
+.completeClassify({
+
+user_id:
+userId,
+
+activity_id:
+activityId,
+
+score:
+score,
+
+correct_count:
+score
+
+});
+
+window.parent.postMessage(
+
+JSON.stringify({
+
+done:true,
+
+score,
+
+total:
+attempted
+
+}),
+
+"*"
+
+);
+
+}catch(err){
+
+console.log(err);
+
+}
+
+};
   useEffect(() => {
     const handleKeyDown = (e) => {
       const q = questions[current];
       if (
-        e.key === 'Enter' &&
+        e.key === "Enter" &&
         q &&
         q.userChoice !== null &&
-        status === 'PLAYING'
+        status === "PLAYING"
       ) {
         handleNext();
       }
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   });
 
   if (questions.length === 0) return null;
@@ -132,15 +367,65 @@ export default function ClassifySentenceAct({ data }) {
   const q = questions[current];
   const total = questions.length;
 
+  const resetQuiz = () => {
+    if (!window.confirm("Are you sure you want to reset this activity?"))
+      return;
+apiService
+.saveClassifyProgress({
+
+user_id:
+userId,
+
+activity_id:
+activityId,
+
+progress_json:
+JSON.stringify({
+
+questions:[],
+
+current:0,
+
+score:0,
+
+attempted:0,
+
+status:
+"PLAYING"
+
+}),
+
+score:0,
+
+attempted:0,
+
+status:
+"IN_PROGRESS"
+
+}); 
+
+    const rawText = data?.text || "";
+    let parsedQs = parseClassify(rawText);
+    parsedQs = shuffleArray(parsedQs);
+
+    setQuestions(parsedQs);
+    setCurrent(0);
+    setScore(0);
+    setAttempted(0);
+    setStatus("PLAYING");
+  };
+
   return (
     <div className={styles.wrapper}>
+      {showConfetti && <Confetti />}
       <div className={styles.container}>
         <div className={styles.wrap}>
           <div className={styles.title} id="actTitle">
             {title}
           </div>
 
-          {status === 'PLAYING' ? (
+          {status === "PLAYING" ? (
+           <>
             <div className={styles.card} id="cardRoot">
               {/* Wrapped in a flex container for side-by-side alignment */}
               <div className={styles.questionHeader}>
@@ -153,15 +438,18 @@ export default function ClassifySentenceAct({ data }) {
 
               <div className={styles.optionsRow}>
                 {q.options.map((opt, i) => {
-                  const isSelected = q.userChoice === i;
+                  const isSelected = q.selectedOption === i;
                   const isCorrectAns = q.correctIndex === i;
-                  const showTick =
-                    (isSelected && isCorrectAns) ||
-                    (q.userChoice !== null && isCorrectAns);
-                  const showCross = isSelected && !isCorrectAns;
+                  const showTick = q.answered && isCorrectAns;
+                  const showCross = q.answered && isSelected && !isCorrectAns;
 
                   let btnClass = styles.optBtn;
-                  if (q.userChoice !== null) {
+
+                  if (!q.answered && isSelected) {
+                    btnClass += ` ${styles.selected}`;
+                  }
+
+                  if (q.answered) {
                     if (isCorrectAns) btnClass += ` ${styles.selected}`;
                     else if (isSelected) btnClass += ` ${styles.wrong}`;
                   }
@@ -175,13 +463,13 @@ export default function ClassifySentenceAct({ data }) {
                       {opt}
                       <span
                         className={`${styles.markIcon} ${styles.tick}`}
-                        style={{ display: showTick ? 'block' : 'none' }}
+                        style={{ display: showTick ? "block" : "none" }}
                       >
                         ✓
                       </span>
                       <span
                         className={`${styles.markIcon} ${styles.cross}`}
-                        style={{ display: showCross ? 'block' : 'none' }}
+                        style={{ display: showCross ? "block" : "none" }}
                       >
                         ✘
                       </span>
@@ -190,51 +478,56 @@ export default function ClassifySentenceAct({ data }) {
                 })}
               </div>
 
-              <div style={{ height: '18px' }}></div>
+              <div style={{ height: "18px" }}></div>
 
-              <div className={styles.controlsRow}>
+             
+            </div>
+             <div className={styles.controlsRow}>
                 <div className={styles.score} id="scoreBox">
                   Score: {score} / {attempted}
                 </div>
                 <div>
                   <button
-                    className={styles.nextBtn}
-                    id="nextBtn"
-                    disabled={q.userChoice === null}
-                    onClick={handleNext}
+                    className={styles.btn}
+                    disabled={!q.answered && q.selectedOption === null}
+                    onClick={!q.answered ? handleSubmit : handleNext}
                   >
-                    {current + 1 === total ? 'Finish' : 'Next'}
+                    {!q.answered
+                      ? "Submit"
+                      : current + 1 === total
+                        ? "Finish"
+                        : "Next"}
                   </button>
                 </div>
               </div>
-            </div>
+           </>
           ) : (
             /* EXACTLY matching the summary from index.html & app.js */
             <div
               id="finalWrap"
               className={`${styles.card} ${styles.summaryCard}`}
-              style={{ marginTop: '18px' }}
+              style={{ marginTop: "18px" }}
             >
-              <div style={{ fontSize: '18px', fontWeight: 600 }}>
+              <div style={{ fontSize: "18px", fontWeight: 600 }}>
                 You have completed this activity.
               </div>
               <div className={styles.summary} id="summaryList">
                 {questions.map((sq, i) => {
                   const user =
                     sq.userChoice === null
-                      ? '(no answer)'
+                      ? "(no answer)"
                       : sq.options[sq.userChoice];
                   const correct = sq.options[sq.correctIndex];
                   const color =
-                    sq.userChoice === sq.correctIndex ? 'green' : 'red';
+                    sq.userChoice === sq.correctIndex ? "green" : "red";
 
                   return (
                     <div key={i} className={styles.summaryItem}>
-                      <strong>{i + 1})</strong>{' '}
+                      <strong>{i + 1})</strong>{" "}
                       <span dangerouslySetInnerHTML={{ __html: sq.qText }} />
                       <br />
                       Answer: <span style={{ color: color }}>{user}</span>
-                      <span style={{ color: '#777', marginLeft: '8px' }}>
+                      <span style={{ color: "#777", marginLeft: "8px" }}>
                         — Correct: <strong>{correct}</strong>
                       </span>
                     </div>
@@ -244,26 +537,37 @@ export default function ClassifySentenceAct({ data }) {
 
               <div
                 style={{
-                  marginTop: '10px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  marginTop: "10px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "10px",
                 }}
               >
                 <div
                   className={styles.small}
                   id="finalScore"
-                  style={{ fontSize: '14px' }}
+                  style={{ fontSize: "14px" }}
                 >
                   Score: {score} / {attempted}
                 </div>
-                <button
-                  className={styles.nextBtn}
-                  id="doneBtn"
-                  onClick={handleDone}
-                >
-                  Next
-                </button>
+
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    className={`${styles.btn} ${styles.primary}`}
+                    onClick={resetQuiz}
+                  >
+                    Reset Activity
+                  </button>
+
+                  <button
+                    className={`${styles.btn} ${styles.primary}`}
+                    id="doneBtn"
+                    onClick={handleDone}
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
           )}

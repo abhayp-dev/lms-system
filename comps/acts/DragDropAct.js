@@ -1,12 +1,14 @@
 // comps/acts/DragDropAct.js
-import React, { useState, useEffect } from 'react';
-import styles from './DragDropAct.module.css';
+import React, { useState, useEffect } from "react";
+import styles from "./DragDropAct.module.css";
+import Confetti from "react-confetti";
+import { apiService } from "../../utils/apiService";
 
 // Helpers
 function fixImgPath(src) {
-  if (!src) return '';
-  if (src.startsWith('http')) return src;
-  if (src.startsWith('/img')) return '/lms-system' + src;
+  if (!src) return "";
+  if (src.startsWith("http")) return src;
+  if (src.startsWith("/img")) return "/lms-system" + src;
   return src;
 }
 
@@ -20,17 +22,31 @@ function shuffleArray(arr) {
 }
 
 export default function DragDropAct({ data }) {
-  const [appState, setAppState] = useState('LOADING'); // LOADING, PLAYING, EVALUATED
-  const [mode, setMode] = useState('FLOW'); // FLOW or ABSOLUTE
-  const [title, setTitle] = useState('');
+  const [appState, setAppState] = useState("LOADING"); // LOADING, PLAYING, EVALUATED
+  const [mode, setMode] = useState("FLOW"); // FLOW or ABSOLUTE
+  const [title, setTitle] = useState("");
 
   // Flow Mode Data
   const [flowImage, setFlowImage] = useState(null);
   const [flowTextParts, setFlowTextParts] = useState([]);
+ const activityId =
+data?.id ||
+"dragdrop";
+
+const userId =
+Number(
+localStorage.getItem(
+"user_id"
+)
+);
+
+
+
 
   // Absolute Mode Data
   const [absRows, setAbsRows] = useState([]);
-
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [allCorrect, setAllCorrect] = useState(false);
   // Interaction Data
   const [zones, setZones] = useState([]); // [{ index, correctWord, userWord }]
   const [options, setOptions] = useState([]); // Unique draggable words
@@ -39,25 +55,29 @@ export default function DragDropAct({ data }) {
   // Mobile UI Fixes
   const [isDragging, setIsDragging] = useState(false);
 
-  useEffect(() => {
+  const initializeActivity = () => {
     if (!data) return;
 
-    // Safely extract the nested payload from your original dragdrop.js format
     const d = data.data && data.data.words ? data.data : data;
     if (!d || !d.words) {
-      console.error('Invalid DragDrop Data');
+      console.error("Invalid DragDrop Data");
       return;
     }
 
-    setTitle(d.title || data.label || 'Drag the words to the correct place');
+    // setTitle(d.title || data.label || "Drag the words to the correct place");
+    setTitle(
+      (d.title || data.label || "Drag the words to the correct place").replace(
+        /\s*\(/,
+        "\n(",
+      ),
+    );
 
-    // Detect Mode
     const textObj =
-      d.svg && d.svg.paths ? d.svg.paths.find((p) => p.type === 'text') : null;
-    const isFlow = !!(textObj && textObj.text);
-    setMode(isFlow ? 'FLOW' : 'ABSOLUTE');
+      d.svg && d.svg.paths ? d.svg.paths.find((p) => p.type === "text") : null;
 
-    // Extract & Shuffle Options (Unique words only)
+    const isFlow = !!(textObj && textObj.text);
+    setMode(isFlow ? "FLOW" : "ABSOLUTE");
+
     const wordsList = d.words.map((w) => w.word);
     const uniqueOptions = shuffleArray([...new Set(wordsList)]);
     setOptions(uniqueOptions);
@@ -65,34 +85,30 @@ export default function DragDropAct({ data }) {
     const initialZones = [];
 
     if (isFlow) {
-      // Setup Flow Mode
-      const imgPath = d.svg.paths.find((p) => p.type === 'image');
-      if (imgPath) setFlowImage(fixImgPath(imgPath.src));
+      const imgPath = d.svg.paths.find((p) => p.type === "image");
+      setFlowImage(imgPath ? fixImgPath(imgPath.src) : null);
 
-      // We split the raw HTML text by the _______ markers
       const rawHtml = textObj.text;
       const parts = rawHtml.split(/(_{2,})/g);
       setFlowTextParts(parts);
 
-      // Create answer zones for each blank found
       let blankCount = 0;
       parts.forEach((part) => {
         if (part.match(/_{2,}/)) {
           initialZones.push({
             index: blankCount,
-            correctWord: d.words[blankCount] ? d.words[blankCount].word : '',
+            correctWord: d.words[blankCount]?.word || "",
             userWord: null,
           });
           blankCount++;
         }
       });
     } else {
-      // Setup Absolute Mode
       const rows = [];
+
       d.words.forEach((w, i) => {
-        // Try matching index, or just grab the first image available
-        let imgP = d.svg.paths.filter((p) => p.type === 'image')[i];
-        if (!imgP) imgP = d.svg.paths.find((p) => p.type === 'image');
+        let imgP = d.svg.paths.filter((p) => p.type === "image")[i];
+        if (!imgP) imgP = d.svg.paths.find((p) => p.type === "image");
 
         rows.push({
           index: i,
@@ -105,32 +121,205 @@ export default function DragDropAct({ data }) {
           userWord: null,
         });
       });
+
       setAbsRows(rows);
     }
 
     setZones(initialZones);
-    setAppState('PLAYING');
-  }, [data]);
+    setAppState("PLAYING");
+  };
 
+  useEffect(() => {
+    if (!data) return;
+
+  
+    const load=
+async()=>{
+
+try{
+
+const res=
+
+await apiService
+.getDragDropProgress(
+
+userId,
+
+activityId
+
+);
+
+if(
+res?.data
+?.progress_json
+){
+
+const parsed=
+JSON.parse(
+
+res.data
+.progress_json
+
+);
+
+setZones(
+parsed.zones
+||[]
+);
+
+setOptions(
+parsed.options
+||[]
+);
+
+setAppState(
+parsed.appState
+||
+"PLAYING"
+);
+
+setAllCorrect(
+parsed.allCorrect
+||false
+);
+
+setShowConfetti(
+parsed.showConfetti
+||false
+);
+
+setMode(
+parsed.mode
+||
+"FLOW"
+);
+
+setTitle(
+parsed.title
+||""
+);
+
+setFlowImage(
+parsed.flowImage
+||null
+);
+
+setFlowTextParts(
+parsed.flowTextParts
+||[]
+);
+
+setAbsRows(
+parsed.absRows
+||[]
+);
+
+return;
+
+}
+
+}catch{}
+
+initializeActivity();
+
+};
+
+load();
+  }, [data]);
+ useEffect(()=>{
+
+if(
+appState==="LOADING"
+)
+return;
+
+apiService
+.saveDragDropProgress({
+
+user_id:
+userId,
+
+activity_id:
+activityId,
+
+progress_json:
+JSON.stringify({
+
+  score:
+zones.filter(
+z=>
+z.userWord===
+z.correctWord
+).length,
+zones,
+
+options,
+
+appState,
+
+allCorrect,
+
+showConfetti,
+
+mode,
+
+title,
+
+flowImage,
+
+flowTextParts,
+
+absRows,
+
+}),
+
+status:
+"IN_PROGRESS",
+
+});
+
+},[
+
+zones,
+
+options,
+
+appState,
+
+allCorrect,
+
+showConfetti,
+
+mode,
+
+title,
+
+flowImage,
+
+flowTextParts,
+
+absRows
+
+]);
   // GLOBALLY LOCK BODY SCROLL DURING DRAG FOR MOBILE UX
   useEffect(() => {
     if (isDragging) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
     } else {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
     }
     return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
     };
   }, [isDragging]);
 
   // --- Handlers ---
   const handleDragStart = (e, optText) => {
     setIsDragging(true);
-    e.dataTransfer.setData('text/plain', optText);
+    e.dataTransfer.setData("text/plain", optText);
   };
 
   const handleDragEnd = () => setIsDragging(false);
@@ -140,33 +329,125 @@ export default function DragDropAct({ data }) {
     setDragOverIdx(null);
     setIsDragging(false);
 
-    if (appState === 'EVALUATED') return;
+    if (appState === "EVALUATED") return;
 
-    const droppedText = e.dataTransfer.getData('text/plain');
+    const droppedText = e.dataTransfer.getData("text/plain");
     if (!droppedText) return;
 
     const newZones = [...zones];
-    newZones[index].userWord = droppedText;
-    setZones(newZones);
 
-    // Auto-validate immediately if all blanks are filled!
-    const allFilled = newZones.every((z) => z.userWord !== null);
-    if (allFilled) {
-      setAppState('EVALUATED');
+    // Remove this word from any previous zone (so it "moves")
+    newZones.forEach((z) => {
+      if (z.userWord === droppedText) {
+        z.userWord = null;
+      }
+    });
+
+    newZones[index].userWord = droppedText;
+
+    setZones(newZones);
+  };
+  const handleSubmit = () => {
+    const allFilled = zones.every((z) => z.userWord !== null);
+    if (!allFilled) return;
+
+    const isAllCorrect = zones.every((z) => z.userWord === z.correctWord);
+
+    setAllCorrect(isAllCorrect);
+    setAppState("EVALUATED");
+
+    if (isAllCorrect) {
+      setShowConfetti(true);
     }
   };
-
   const handleDragOver = (e, index) => {
     e.preventDefault();
-    if (appState !== 'EVALUATED') setDragOverIdx(index);
+    if (appState !== "EVALUATED") setDragOverIdx(index);
   };
 
   const handleDragLeave = () => setDragOverIdx(null);
 
-  const handleNextClick = () => {
-    try {
-      window.parent.postMessage(JSON.stringify({ done: true }), '*');
-    } catch (e) {}
+ const handleNextClick =
+async()=>{
+
+try{
+
+await apiService
+.completeDragDrop({
+
+user_id:
+userId,
+
+activity_id:
+activityId,
+
+score:
+score,
+
+attempted:
+total,
+
+status:
+"COMPLETED"
+
+});
+
+}catch{}
+
+try{
+
+window.parent
+.postMessage(
+
+JSON.stringify({
+
+done:true
+
+}),
+
+"*"
+
+);
+
+}catch{}
+
+};
+
+  const resetActivity = () => {
+    if (!window.confirm("Are you sure you want to reset this activity?"))
+      return;
+
+    
+
+    setShowConfetti(false);
+    setAllCorrect(false);
+    apiService
+.saveDragDropProgress({
+
+user_id:
+userId,
+
+activity_id:
+activityId,
+
+progress_json:
+JSON.stringify({
+
+zones:[],
+
+score:0,
+
+appState:
+"PLAYING"
+
+}),
+
+status:
+"IN_PROGRESS"
+
+});
+
+    initializeActivity();
   };
 
   // --- Render Helpers ---
@@ -174,12 +455,12 @@ export default function DragDropAct({ data }) {
     const zone = zones[index];
     if (!zone) return null;
 
-    const isEvaluated = appState === 'EVALUATED';
+    const isEvaluated = appState === "EVALUATED";
     const isHovered = dragOverIdx === index;
     const isCorrect = isEvaluated && zone.userWord === zone.correctWord;
     const isWrong = isEvaluated && zone.userWord !== zone.correctWord;
 
-    let boxClass = mode === 'FLOW' ? styles.dropZoneFlow : styles.dropZoneAbs;
+    let boxClass = mode === "FLOW" ? styles.dropZoneFlow : styles.dropZoneAbs;
     if (isHovered) boxClass += ` ${styles.dropZoneHover}`;
     if (isCorrect) boxClass += ` ${styles.correct}`;
     if (isWrong) boxClass += ` ${styles.wrong}`;
@@ -191,6 +472,13 @@ export default function DragDropAct({ data }) {
           onDragOver={(e) => handleDragOver(e, index)}
           onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, index)}
+          onClick={() => {
+            if (appState === "PLAYING") {
+              const newZones = [...zones];
+              newZones[index].userWord = null;
+              setZones(newZones);
+            }
+          }}
         >
           {zone.userWord}
         </span>
@@ -213,7 +501,7 @@ export default function DragDropAct({ data }) {
               className={styles.flowImg}
             />
             {/* 🟢 ADDED: Bouncing Scroll Hint */}
-            {appState === 'PLAYING' && (
+            {appState === "PLAYING" && (
               <div className={styles.scrollHint}>Scroll Down To Answer 👇</div>
             )}
           </>
@@ -245,50 +533,102 @@ export default function DragDropAct({ data }) {
     );
   };
 
-  if (appState === 'LOADING') return null;
+  if (appState === "LOADING") return null;
 
   const usedOptions = zones.map((z) => z.userWord).filter(Boolean);
+  const score = zones.filter((z) => z.userWord === z.correctWord).length;
 
+  const total = zones.length;
   return (
     <div
       className={styles.wrapper}
-      style={{ overflowY: isDragging ? 'hidden' : 'auto' }}
+      style={{ overflowY: isDragging ? "hidden" : "auto" }}
     >
+      {showConfetti && <Confetti />}
       <div className={styles.mainCard}>
         <div className={styles.mainCardInner}>
-          <h2 className={styles.title}>{title}</h2>
+          <div className={styles.title}>{title}</div>
 
           {/* The Scrollable Game Area */}
           <div
             className={styles.gameArea}
-            style={{ overflowY: isDragging ? 'hidden' : 'auto' }}
+            style={{ overflowY: isDragging ? "hidden" : "auto" }}
           >
-            {mode === 'FLOW' ? renderFlowMode() : renderAbsoluteMode()}
+            {mode === "FLOW" ? renderFlowMode() : renderAbsoluteMode()}
           </div>
 
-          {/* Word Bank safely locked to the bottom! */}
-          {appState === 'PLAYING' && (
-            <div className={styles.wordBank}>
-              {options.map((opt, i) => (
+          {appState === "PLAYING" && (
+            <>
+              <div className={styles.wordBank}>
+                {options.map((opt, i) => (
+                  <button
+                    key={i}
+                    onDragStart={(e) => handleDragStart(e, opt)}
+                    onDragEnd={handleDragEnd}
+                    className={`${styles.option} ${
+                      usedOptions.includes(opt) ? styles.used : ""
+                    }`}
+                    draggable={appState !== "EVALUATED"}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+
+              <div className={styles.controlsRow}>
                 <button
-                  key={i}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, opt)}
-                  onDragEnd={handleDragEnd}
-                  className={`${styles.option} ${usedOptions.includes(opt) ? styles.used : ''}`}
+                  className={`${styles.btn} ${styles.primary}`}
+                  onClick={handleSubmit}
+                  disabled={!zones.every((z) => z.userWord !== null)}
                 >
-                  {opt}
+                  Submit
                 </button>
-              ))}
-            </div>
+              </div>
+            </>
           )}
 
-          {appState === 'EVALUATED' && (
-            <div className={styles.controlsRow}>
-              <button className={styles.nextBtn} onClick={handleNextClick}>
-                Next →
-              </button>
-            </div>
+          {appState === "EVALUATED" && (
+            <>
+              {allCorrect && (
+                <div style={{ paddingLeft: "20px" }}>
+                  🎉 All answers correct!
+                </div>
+              )}
+
+              {!allCorrect && (
+                <div style={{ paddingLeft: "20px" }}>
+                  ❌ Some answers are incorrect
+                </div>
+              )}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginTop: "5px",
+                  alignItems: "center",
+                }}
+              >
+                <div className={styles.score}>
+                  Score: {score} / {total}
+                </div>
+
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    className={`${styles.btn} ${styles.primary}`}
+                    onClick={resetActivity}
+                  >
+                    Reset Activity
+                  </button>
+
+                  <button
+                    className={`${styles.btn} ${styles.primary}`}
+                    onClick={handleNextClick}
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>

@@ -1,14 +1,15 @@
 // comps/acts/WordSearchAct.js
-import React, { useState, useEffect, useCallback } from 'react';
-import styles from './WordSearchAct.module.css';
+import React, { useState, useEffect, useCallback } from "react";
+import { apiService } from "../../utils/apiService";
+import styles from "./WordSearchAct.module.css";
 
 const WORD_COLORS = [
-  '#F48FB1',
-  '#90CAF9',
-  '#CE93D8',
-  '#80CBC4',
-  '#FFCC80',
-  '#B39DDB',
+  "#F48FB1",
+  "#90CAF9",
+  "#CE93D8",
+  "#80CBC4",
+  "#FFCC80",
+  "#B39DDB",
 ];
 
 export default function WordSearchAct({ data }) {
@@ -16,6 +17,11 @@ export default function WordSearchAct({ data }) {
   const [wordsData, setWordsData] = useState([]);
   const [foundWords, setFoundWords] = useState([]);
   const [foundLines, setFoundLines] = useState([]);
+  const activityId = data?.id || "word_search_act";
+  const userId =
+ Number(
+localStorage.getItem("user_id")
+);
 
   // Selection State
   const [isSelecting, setIsSelecting] = useState(false);
@@ -35,23 +41,63 @@ export default function WordSearchAct({ data }) {
     if (Array.isArray(data.table)) {
       parsedGrid = Array.isArray(data.table[0])
         ? data.table
-        : data.table.map((row) => row.split(''));
-    } else if (typeof data.table === 'string') {
+        : data.table.map((row) => row.split(""));
+    } else if (typeof data.table === "string") {
       parsedGrid = data.table
-        .replace(/\r/g, '')
-        .split('\n')
-        .map((r) => r.split(''));
+        .replace(/\r/g, "")
+        .split("\n")
+        .map((r) => r.split(""));
     }
-    setGrid(parsedGrid);
 
     // Parse Words
+    let parsedWords = [];
     if (data.words) {
-      const parsedWords = data.words.map((w) => ({
-        wordStr: w.word.join(''),
+      parsedWords = data.words.map((w) => ({
+        wordStr: w.word.join(""),
         marker: w.marker,
       }));
-      setWordsData(parsedWords);
     }
+
+    
+
+    // 👉 FIRST LOAD
+    setGrid(parsedGrid);
+    setWordsData(parsedWords);
+
+    const loadProgress = async () => {
+  try {
+
+    const res =
+      await apiService.getWordSearchProgress(
+        userId,
+        activityId
+      );
+
+    if (res?.data?.progress_json) {
+
+      const parsed =
+        JSON.parse(
+          res.data.progress_json
+        );
+
+      setFoundWords(
+        parsed.foundWords || []
+      );
+
+      setFoundLines(
+        parsed.foundLines || []
+      );
+
+    }
+
+  } catch (err) {
+    console.log(
+      "No progress"
+    );
+  }
+};
+
+loadProgress();
   }, [data]);
 
   // --- SELECTION LOGIC ---
@@ -60,7 +106,16 @@ export default function WordSearchAct({ data }) {
     setStartCell({ r, c });
     setCurrentSelection([{ r, c }]);
   };
-
+  // const saveProgress = (extra = {}) => {
+  //   localStorage.setItem(
+  //     activityId,
+  //     JSON.stringify({
+  //       foundWords,
+  //       foundLines,
+  //       ...extra,
+  //     }),
+  //   );
+  // };
   const handleMove = (r, c) => {
     if (!isSelecting || !startCell) return;
 
@@ -91,11 +146,11 @@ export default function WordSearchAct({ data }) {
 
     const selectedWord = currentSelection
       .map((cell) => grid[cell.r][cell.c])
-      .join('');
-    const reverseWord = selectedWord.split('').reverse().join('');
+      .join("");
+    const reverseWord = selectedWord.split("").reverse().join("");
 
     const targetObj = wordsData.find(
-      (w) => w.wordStr === selectedWord || w.wordStr === reverseWord
+      (w) => w.wordStr === selectedWord || w.wordStr === reverseWord,
     );
 
     if (targetObj && !foundWords.includes(targetObj.wordStr)) {
@@ -115,27 +170,152 @@ export default function WordSearchAct({ data }) {
       const midX = (x1 + x2) / 2;
       const midY = (y1 + y2) / 2;
       const color = WORD_COLORS[foundWords.length % WORD_COLORS.length];
+setFoundWords((prevWords) => {
 
-      setFoundLines((prev) => [
-        ...prev,
-        { width: length + 34, angle, midX, midY, color },
-      ]);
-      setFoundWords((prev) => [...prev, wordStr]);
-    }
+  const updatedWords = [
+    ...prevWords,
+    wordStr,
+  ];
 
-    setIsSelecting(false);
-    setStartCell(null);
-    setCurrentSelection([]);
-  }, [currentSelection, grid, wordsData, foundWords, isSelecting]);
+  setFoundLines((prevLines) => {
 
-  // Global Mouse Up
+    const updatedLines = [
+      ...prevLines,
+      {
+        width: length + 34,
+        angle,
+        midX,
+        midY,
+        color,
+      },
+    ];
+
+    apiService
+.saveWordSearchProgress({
+
+user_id:
+userId,
+
+activity_id:
+activityId,
+
+progress_json:
+JSON.stringify({
+
+foundWords:
+updatedWords,
+
+foundLines:
+updatedLines,
+
+}),
+
+score:
+updatedWords.length,
+
+attempted:
+wordsData.length,
+
+status:
+"IN_PROGRESS",
+
+});
+
+    return updatedLines;
+
+  });
+
+  return updatedWords;
+
+});
+
+
+
+setIsSelecting(false);
+
+setStartCell(null);
+
+setCurrentSelection([]);
+}
+
+setIsSelecting(false);
+
+setStartCell(null);
+
+setCurrentSelection([]);
+
+}, [
+  currentSelection,
+  grid,
+  wordsData,
+  foundWords,
+  isSelecting,
+]);
+
+const rows = grid.length;
+
+const cols =
+  grid[0]?.length || 0;
+
+const isVictory =
+  foundWords.length ===
+  wordsData.length &&
+  wordsData.length > 0;
+
+const resetActivity = () => {
+
+setFoundWords([]);
+
+setFoundLines([]);
+
+setIsSelecting(false);
+
+setStartCell(null);
+
+setCurrentSelection([]);
+
+setHintActiveCell(null);
+
+setHintActiveWord(null);
+
+apiService
+.saveWordSearchProgress({
+
+user_id:
+userId,
+
+activity_id:
+activityId,
+
+progress_json:
+JSON.stringify({
+
+foundWords:[],
+
+foundLines:[]
+
+}),
+
+score:0,
+
+attempted:
+wordsData.length,
+
+status:
+"IN_PROGRESS"
+
+});
+
+};
+
+// Global Mouse Up
   useEffect(() => {
     const handleGlobalUp = () => checkWordAndEnd();
-    document.addEventListener('mouseup', handleGlobalUp);
-    document.addEventListener('touchend', handleGlobalUp);
+    document.addEventListener("mouseup", handleGlobalUp);
+    document.addEventListener("touchend", handleGlobalUp);
     return () => {
-      document.removeEventListener('mouseup', handleGlobalUp);
-      document.removeEventListener('touchend', handleGlobalUp);
+      document.removeEventListener("mouseup", handleGlobalUp);
+      document.removeEventListener("touchend", handleGlobalUp);
     };
   }, [checkWordAndEnd]);
 
@@ -162,7 +342,7 @@ export default function WordSearchAct({ data }) {
   // --- HINT LOGIC ---
   const handleHint = () => {
     const targetWordObj = wordsData.find(
-      (w) => !foundWords.includes(w.wordStr)
+      (w) => !foundWords.includes(w.wordStr),
     );
     if (!targetWordObj) return;
 
@@ -179,180 +359,224 @@ export default function WordSearchAct({ data }) {
   };
 
   // --- NEXT LOGIC ---
-  const handleNext = () => {
-    try {
-      window.parent.postMessage(
-        JSON.stringify({
-          done: true,
-          score: foundWords.length,
-          total: wordsData.length,
-        }),
-        '*'
-      );
-    } catch (_) {}
-  };
+ const handleNext =
+async () => {
 
-  const rows = grid.length;
-  const cols = grid[0]?.length || 0;
-  const isVictory =
-    foundWords.length === wordsData.length && wordsData.length > 0;
+try {
+
+await apiService
+.completeWordSearch({
+
+user_id:
+userId,
+
+activity_id:
+activityId,
+
+score:
+foundWords.length,
+
+attempted:
+wordsData.length,
+
+status:
+"COMPLETED"
+
+});
+
+} catch {}
+
+try {
+
+window.parent
+.postMessage(
+
+JSON.stringify({
+
+done:true,
+
+score:
+foundWords.length,
+
+total:
+wordsData.length,
+
+}),
+
+"*"
+
+);
+
+} catch (_) {}
+
+};
 
   return (
     <div className={styles.wrapper}>
       <div className={styles.mainCard}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div className={styles.titleText}>
-            {data.title || 'Find the given words'}
-          </div>
-        </div>
+        <div className={styles.main}>
+          <div className={styles.mainInner}>
+            {/* Header */}
+            <div className={styles.header}>
+              <div className={styles.titleText}>
+                {data.title || "Find the given words"}
+              </div>
+            </div>
 
-        {/* Game Area */}
-        <div className={styles.gameArea}>
-          <div className={styles.gridWrapper}>
-            <div
-              className={styles.wordGrid}
-              style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-            >
-              {/* 1. Render Render Drawn Lines (Behind Text) */}
-              {foundLines.map((line, i) => (
+            {/* Game Area */}
+            <div className={styles.gameArea}>
+              <div className={styles.gridWrapper}>
                 <div
-                  key={`line-${i}`}
-                  className={styles.highlightLine}
-                  style={{
-                    width: `${line.width}px`,
-                    backgroundColor: line.color,
-                    left: `${line.midX}px`,
-                    top: `${line.midY}px`,
-                    transform: `translate(-50%, -50%) rotate(${line.angle}deg)`,
-                  }}
-                />
-              ))}
+                  className={styles.wordGrid}
+                  style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                >
+                  {/* 1. Render Render Drawn Lines (Behind Text) */}
+                  {foundLines.map((line, i) => (
+                    <div
+                      key={`line-${i}`}
+                      className={styles.highlightLine}
+                      style={{
+                        width: `${line.width}px`,
+                        backgroundColor: line.color,
+                        left: `${line.midX}px`,
+                        top: `${line.midY}px`,
+                        transform: `translate(-50%, -50%) rotate(${line.angle}deg)`,
+                      }}
+                    />
+                  ))}
 
-              {/* 2. Render Grid Cells (Text) */}
-              {grid.map((row, r) =>
-                row.map((letter, c) => {
-                  const isSelected = currentSelection.some(
-                    (sel) => sel.r === r && sel.c === c
-                  );
+                  {/* 2. Render Grid Cells (Text) */}
+                  {grid.map((row, r) =>
+                    row.map((letter, c) => {
+                      const isSelected = currentSelection.some(
+                        (sel) => sel.r === r && sel.c === c,
+                      );
 
-                  // A cell is visually 'found' if it lies on ANY of the found words' markers
-                  // But since we use absolute lines, we just need to know if it should be white.
-                  // We can check if it exists in any correctly selected word logic, or just rely on the line background
-                  // The original CSS `.cell.found` only changes text color to white.
+                      // A cell is visually 'found' if it lies on ANY of the found words' markers
+                      // But since we use absolute lines, we just need to know if it should be white.
+                      // We can check if it exists in any correctly selected word logic, or just rely on the line background
+                      // The original CSS `.cell.found` only changes text color to white.
 
-                  // For React, we'll determine if it's found by checking if it belongs to a found word.
-                  // Easiest way: if its coordinates fall into any found word's marker range.
-                  let isFound = false;
-                  wordsData.forEach((w) => {
-                    if (foundWords.includes(w.wordStr)) {
-                      const c1 = w.marker[0],
-                        r1 = w.marker[1],
-                        c2 = w.marker[2],
-                        r2 = w.marker[3];
-                      const dr = r2 - r1,
-                        dc = c2 - c1;
-                      const steps = Math.max(Math.abs(dr), Math.abs(dc));
-                      const rStep = dr === 0 ? 0 : dr / steps;
-                      const cStep = dc === 0 ? 0 : dc / steps;
-                      for (let i = 0; i <= steps; i++) {
-                        if (r === r1 + i * rStep && c === c1 + i * cStep)
-                          isFound = true;
-                      }
-                    }
-                  });
+                      // For React, we'll determine if it's found by checking if it belongs to a found word.
+                      // Easiest way: if its coordinates fall into any found word's marker range.
+                      let isFound = false;
+                      wordsData.forEach((w) => {
+                        if (foundWords.includes(w.wordStr)) {
+                          const c1 = w.marker[0],
+                            r1 = w.marker[1],
+                            c2 = w.marker[2],
+                            r2 = w.marker[3];
+                          const dr = r2 - r1,
+                            dc = c2 - c1;
+                          const steps = Math.max(Math.abs(dr), Math.abs(dc));
+                          const rStep = dr === 0 ? 0 : dr / steps;
+                          const cStep = dc === 0 ? 0 : dc / steps;
+                          for (let i = 0; i <= steps; i++) {
+                            if (r === r1 + i * rStep && c === c1 + i * cStep)
+                              isFound = true;
+                          }
+                        }
+                      });
 
-                  const isHintActive =
-                    hintActiveCell?.r === r && hintActiveCell?.c === c;
+                      const isHintActive =
+                        hintActiveCell?.r === r && hintActiveCell?.c === c;
 
-                  let cellClass = styles.cell;
-                  if (isSelected) cellClass += ` ${styles.selected}`;
-                  if (isFound) cellClass += ` ${styles.found}`;
-                  if (isHintActive) cellClass += ` ${styles.hintActive}`;
+                      let cellClass = styles.cell;
+                      if (isSelected) cellClass += ` ${styles.selected}`;
+                      if (isFound) cellClass += ` ${styles.found}`;
+                      if (isHintActive) cellClass += ` ${styles.hintActive}`;
+
+                      return (
+                        <div
+                          key={`${r}-${c}`}
+                          data-row={r}
+                          data-col={c}
+                          className={cellClass}
+                          onMouseDown={() => handleStart(r, c)}
+                          onMouseEnter={() => handleMove(r, c)}
+                        >
+                          {letter}
+                        </div>
+                      );
+                    }),
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Word Strip */}
+            <div className={styles.wordStrip}>
+              <div className={styles.wordList}>
+                {wordsData.map((item) => {
+                  const isFound = foundWords.includes(item.wordStr);
+                  const isHinting = hintActiveWord === item.wordStr;
+
+                  let itemClass = styles.wordItem;
+                  if (isFound) itemClass += ` ${styles.wordItemFound}`;
 
                   return (
                     <div
-                      key={`${r}-${c}`}
-                      data-row={r}
-                      data-col={c}
-                      className={cellClass}
-                      onMouseDown={() => handleStart(r, c)}
-                      onMouseEnter={() => handleMove(r, c)}
+                      key={item.wordStr}
+                      className={itemClass}
+                      style={
+                        isHinting
+                          ? {
+                              backgroundColor: "#ffd700",
+                              transform: "scale(1.1)",
+                              fontWeight: "bold",
+                            }
+                          : {}
+                      }
                     >
-                      {letter}
+                      {item.wordStr}
                     </div>
                   );
-                })
+                })}
+              </div>
+            </div>
+          </div>
+          {/* Footer */}
+          <div className={styles.gameFooter}>
+            <div></div>
+
+            <div style={{ display: "flex" }}>
+              {!isVictory && (
+                <button
+                  className={`${styles.btn} ${styles.primary}`}
+                  onClick={handleHint}
+                >
+                  Hint 💡
+                </button>
+              )}
+              {isVictory && (
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    className={`${styles.btn} ${styles.primary}`}
+                    onClick={resetActivity}
+                  >
+                    Reset Activity
+                  </button>
+
+                  <button
+                    className={`${styles.btn} ${styles.primary}`}
+                    onClick={handleNext}
+                  >
+                    Next
+                  </button>
+                </div>
               )}
             </div>
           </div>
+
+          {/* Victory Toast */}
+          {isVictory && (
+            <div className={styles.victoryToast}>
+              <span>🎉 Great Job! Click Next to continue.</span>
+            </div>
+          )}
         </div>
-
-        {/* Word Strip */}
-        <div className={styles.wordStrip}>
-          <div className={styles.wordList}>
-            {wordsData.map((item) => {
-              const isFound = foundWords.includes(item.wordStr);
-              const isHinting = hintActiveWord === item.wordStr;
-
-              let itemClass = styles.wordItem;
-              if (isFound) itemClass += ` ${styles.wordItemFound}`;
-
-              return (
-                <div
-                  key={item.wordStr}
-                  className={itemClass}
-                  style={
-                    isHinting
-                      ? {
-                          backgroundColor: '#ffd700',
-                          transform: 'scale(1.1)',
-                          fontWeight: 'bold',
-                        }
-                      : {}
-                  }
-                >
-                  {item.wordStr}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className={styles.gameFooter}>
-          <div className={styles.scoreBadge}>
-            Score: {foundWords.length} / {wordsData.length}
-          </div>
-
-          <div style={{ display: 'flex' }}>
-            {!isVictory && (
-              <button
-                className={`${styles.actionBtn} ${styles.hintBtn}`}
-                onClick={handleHint}
-              >
-                Hint 💡
-              </button>
-            )}
-            {isVictory && (
-              <button
-                className={`${styles.actionBtn} ${styles.nextBtn}`}
-                onClick={handleNext}
-              >
-                Next ➜
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Victory Toast */}
-        {isVictory && (
-          <div className={styles.victoryToast}>
-            <span>🎉 Great Job! Click Next to continue.</span>
-          </div>
-        )}
       </div>
     </div>
   );
